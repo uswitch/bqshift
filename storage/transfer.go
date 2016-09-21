@@ -107,6 +107,11 @@ func (c *Client) TransferToCloudStorage(source *redshift.UnloadResult) (*StoredR
 			},
 		},
 		TransferSpec: &transfer.TransferSpec{
+			TransferOptions: &transfer.TransferOptions{
+				DeleteObjectsFromSourceAfterTransfer:  true,
+				DeleteObjectsUniqueInSink:             true,
+				OverwriteObjectsAlreadyExistingInSink: true,
+			},
 			AwsS3DataSource: &transfer.AwsS3Data{
 				AwsAccessKey: &transfer.AwsAccessKey{
 					AccessKeyId:     c.s3config.Credentials.AccessKey,
