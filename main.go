@@ -1,11 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"github.com/uswitch/bqshift/bigquery"
 	"github.com/uswitch/bqshift/redshift"
 	"gopkg.in/alecthomas/kingpin.v2"
-	"os"
+	"log"
 )
 
 var (
@@ -24,8 +23,7 @@ func main() {
 
 	credentials, err := ParseCredentialsConfiguration(*config)
 	if err != nil {
-		fmt.Println("error parsing redshift configuration:", err.Error())
-		os.Exit(1)
+		log.Fatalln("error parsing redshift configuration:", err.Error())
 	}
 	credentials.S3.Credentials = &redshift.AWSCredentials{*accessKey, *secretKey}
 	config := &Configuration{
@@ -35,16 +33,14 @@ func main() {
 
 	shifter, err := NewShifter(config)
 	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
+		log.Fatalln(err.Error())
 	}
 
 	bq := bigquery.NewConfiguration(*project, *dataset, *table)
 	err = shifter.Run(*table, bq)
 	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
+		log.Fatalln(err.Error())
 	}
 
-	fmt.Println("finished")
+	log.Println("finished")
 }

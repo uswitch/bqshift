@@ -10,6 +10,7 @@ import (
 type Configuration struct {
 	OverwriteBigQuery        bool
 	CredentialsConfiguration *CredentialsConfiguration
+	Verbose                  bool
 }
 
 type CredentialsConfiguration struct {

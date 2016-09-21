@@ -8,6 +8,7 @@ import (
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2/google"
 	transfer "google.golang.org/api/storagetransfer/v1"
+	"log"
 	"time"
 )
 
@@ -59,7 +60,7 @@ func (c *Client) blockForJobCompletion(createdJob *transfer.TransferJob) error {
 		}
 
 		if len(resp.Operations) != 1 {
-			fmt.Printf("couldn't find transfer operation %s, waiting 30s.", filter)
+			log.Printf("couldn't find transfer operation %s, waiting 30s.\n", filter)
 			continue
 		}
 
@@ -68,10 +69,9 @@ func (c *Client) blockForJobCompletion(createdJob *transfer.TransferJob) error {
 			if op.Error != nil {
 				return fmt.Errorf("transfer operation failed: %s", op.Error.Message)
 			}
-			fmt.Println("completed!")
 			return nil
 		} else {
-			fmt.Println("incomplete. will check again in 30s.")
+			log.Println("transfer in progress. waiting 30s.")
 		}
 	}
 
@@ -132,7 +132,7 @@ func (c *Client) TransferToCloudStorage(source *redshift.UnloadResult) (*StoredR
 		return nil, err
 	}
 
-	fmt.Println("transfer job created successfully, this may take a while.")
+	log.Println("transfer requested, this may take a while.")
 	err = c.blockForJobCompletion(created)
 	if err != nil {
 		return nil, err

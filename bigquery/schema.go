@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/uswitch/bqshift/redshift"
 	bq "google.golang.org/api/bigquery/v2"
+	"log"
 )
 
 type TableRef struct {
@@ -43,7 +44,7 @@ type LoadSpec struct {
 func (c *Client) LoadTable(spec *LoadSpec) error {
 	pattern := sourcePattern(spec.BucketName, spec.ObjectPrefix)
 
-	fmt.Printf("loading %s into %s\n", pattern, spec.TableReference)
+	log.Printf("loading %s into %s\n", pattern, spec.TableReference)
 
 	config := &bq.JobConfiguration{
 		Load: &bq.JobConfigurationLoad{

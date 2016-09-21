@@ -5,6 +5,7 @@ import (
 	"github.com/uswitch/bqshift/bigquery"
 	"github.com/uswitch/bqshift/redshift"
 	"github.com/uswitch/bqshift/storage"
+	"log"
 )
 
 type shifter struct {
@@ -32,18 +33,17 @@ func (s *shifter) Run(table string, config *bigquery.Configuration) error {
 		return fmt.Errorf("error creating bigquery client: %s", err.Error())
 	}
 
-	fmt.Println("unloading to s3")
+	log.Println("unloading to s3")
 	result, err := s.redshift.Unload(table)
 	if err != nil {
 		return fmt.Errorf("error unloading: %s", err.Error())
 	}
-	fmt.Println("unloaded to", result.Bucket, ", transferring to cloud storage")
+	log.Println("transferring to cloud storage")
 	stored, err := storageClient.TransferToCloudStorage(result)
 	if err != nil {
 		return fmt.Errorf("error transferring to cloud storage: %s", err.Error())
 	}
 
-	fmt.Println("transferred to cloud storage. creating bigquery table.")
 	sourceSchema, err := s.redshift.ExtractSchema(table)
 	if err != nil {
 		return fmt.Errorf("error extracting source schema: %s", err.Error())
@@ -53,6 +53,7 @@ func (s *shifter) Run(table string, config *bigquery.Configuration) error {
 		return fmt.Errorf("error translating redshift schema to bigquery: %s", err.Error())
 	}
 
+	log.Println("loading into bigquery")
 	ref := bigquery.TableReference(config.ProjectID, config.DatasetName, table)
 	spec := &bigquery.LoadSpec{
 		TableReference: ref,
