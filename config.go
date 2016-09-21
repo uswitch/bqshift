@@ -11,6 +11,7 @@ type Configuration struct {
 	OverwriteBigQuery        bool
 	CredentialsConfiguration *CredentialsConfiguration
 	Verbose                  bool
+	WaitForLoad              bool
 }
 
 type CredentialsConfiguration struct {

@@ -60,7 +60,7 @@ func (c *Client) blockForJobCompletion(createdJob *transfer.TransferJob) error {
 		}
 
 		if len(resp.Operations) != 1 {
-			log.Printf("couldn't find transfer operation %s, waiting 30s.\n", filter)
+			log.Println("waiting another 30s for transfer operation.")
 			continue
 		}
 
