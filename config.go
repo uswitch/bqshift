@@ -8,17 +8,22 @@ import (
 )
 
 type Configuration struct {
+	OverwriteBigQuery        bool
+	CredentialsConfiguration *CredentialsConfiguration
+}
+
+type CredentialsConfiguration struct {
 	Redshift *redshift.RedshiftConfiguration `yaml:"redshift"`
 	S3       *redshift.S3Configuration       `yaml:"s3"`
 }
 
-func ParseConfiguration(file *os.File) (*Configuration, error) {
+func ParseCredentialsConfiguration(file *os.File) (*CredentialsConfiguration, error) {
 	contents, err := ioutil.ReadAll(file)
 	if err != nil {
 		return nil, err
 	}
 
-	var c Configuration
+	var c CredentialsConfiguration
 	err = yaml.Unmarshal(contents, &c)
 	if err != nil {
 		return nil, err

@@ -55,11 +55,11 @@ func (c *Client) blockForJobCompletion(createdJob *transfer.TransferJob) error {
 	for _ = range ticks {
 		resp, err := c.service.TransferOperations.List("transferOperations").Filter(filter).Do()
 		if err != nil {
-			return fmt.Errorf("error listing operations. ensure account has project admin role: %s", err.Error())
+			return fmt.Errorf("error listing operations: %s", err.Error())
 		}
 
 		if len(resp.Operations) != 1 {
-			fmt.Println("couldn't find transfer operation, waiting 30s.")
+			fmt.Printf("couldn't find transfer operation %s, waiting 30s.", filter)
 			continue
 		}
 
@@ -109,7 +109,6 @@ func (c *Client) TransferToCloudStorage(source *redshift.UnloadResult) (*StoredR
 		TransferSpec: &transfer.TransferSpec{
 			TransferOptions: &transfer.TransferOptions{
 				DeleteObjectsFromSourceAfterTransfer:  true,
-				DeleteObjectsUniqueInSink:             true,
 				OverwriteObjectsAlreadyExistingInSink: true,
 			},
 			AwsS3DataSource: &transfer.AwsS3Data{

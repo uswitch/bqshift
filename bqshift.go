@@ -13,7 +13,7 @@ type shifter struct {
 }
 
 func (s *shifter) Run(table string, config *bigquery.Configuration) error {
-	storageClient, err := storage.NewClient(config, s.config.S3)
+	storageClient, err := storage.NewClient(config, s.config.CredentialsConfiguration.S3)
 	if err != nil {
 		return err
 	}
@@ -44,16 +44,24 @@ func (s *shifter) Run(table string, config *bigquery.Configuration) error {
 	}
 
 	fmt.Println("transferred to cloud storage. creating bigquery table.")
-	schema, err := s.redshift.ExtractSchema(table)
+	sourceSchema, err := s.redshift.ExtractSchema(table)
 	if err != nil {
 		return fmt.Errorf("error extracting source schema: %s", err.Error())
 	}
-	ref := bigquery.TableReference(config.ProjectID, config.DatasetName, table)
-	err = bq.CreateTable(ref, schema)
+	destSchema, err := sourceSchema.ToBigQuerySchema()
 	if err != nil {
-		return fmt.Errorf("couldn't create bigquery destination table: %s", err.Error())
+		return fmt.Errorf("error translating redshift schema to bigquery: %s", err.Error())
 	}
-	err = bq.LoadTable(ref, stored.BucketName, stored.Prefix)
+
+	ref := bigquery.TableReference(config.ProjectID, config.DatasetName, table)
+	spec := &bigquery.LoadSpec{
+		TableReference: ref,
+		BucketName:     stored.BucketName,
+		ObjectPrefix:   stored.Prefix,
+		Overwrite:      s.config.OverwriteBigQuery,
+		Schema:         destSchema,
+	}
+	err = bq.LoadTable(spec)
 	if err != nil {
 		return fmt.Errorf("error loading data into table: %s", err.Error())
 	}
@@ -62,7 +70,7 @@ func (s *shifter) Run(table string, config *bigquery.Configuration) error {
 }
 
 func NewShifter(config *Configuration) (*shifter, error) {
-	client, err := redshift.NewClient(config.Redshift, config.S3)
+	client, err := redshift.NewClient(config.CredentialsConfiguration.Redshift, config.CredentialsConfiguration.S3)
 	if err != nil {
 		return nil, err
 	}

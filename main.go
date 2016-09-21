@@ -12,8 +12,9 @@ var (
 	config    = kingpin.Flag("config", "configuration file").Required().File()
 	accessKey = kingpin.Flag("awsAccessKeyId", "AWS access key").OverrideDefaultFromEnvar("AWS_ACCESS_KEY_ID").Required().String()
 	secretKey = kingpin.Flag("secretAccessKey", "AWS secret access key").OverrideDefaultFromEnvar("AWS_SECRET_ACCESS_KEY").Required().String()
+	project   = kingpin.Flag("project", "google project").OverrideDefaultFromEnvar("GCLOUD_PROJECT").Required().String()
+	overwrite = kingpin.Flag("overwrite", "overwrite bigquery table").Bool()
 
-	project = kingpin.Flag("project", "google project").OverrideDefaultFromEnvar("GCLOUD_PROJECT").Required().String()
 	dataset = kingpin.Arg("dataset", "destination bigquery dataset").Required().String()
 	table   = kingpin.Arg("table", "name of table").Required().String()
 )
@@ -21,12 +22,16 @@ var (
 func main() {
 	kingpin.Parse()
 
-	config, err := ParseConfiguration(*config)
+	credentials, err := ParseCredentialsConfiguration(*config)
 	if err != nil {
 		fmt.Println("error parsing redshift configuration:", err.Error())
 		os.Exit(1)
 	}
-	config.S3.Credentials = &redshift.AWSCredentials{*accessKey, *secretKey}
+	credentials.S3.Credentials = &redshift.AWSCredentials{*accessKey, *secretKey}
+	config := &Configuration{
+		CredentialsConfiguration: credentials,
+		OverwriteBigQuery:        *overwrite,
+	}
 
 	shifter, err := NewShifter(config)
 	if err != nil {

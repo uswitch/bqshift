@@ -3,6 +3,7 @@ package redshift
 import (
 	"fmt"
 	_ "github.com/lib/pq"
+	bq "google.golang.org/api/bigquery/v2"
 	"strings"
 )
 
@@ -30,6 +31,49 @@ func (c *Column) String() string {
 
 type TableSchema struct {
 	Columns []*Column
+}
+
+func (in *TableSchema) ToBigQuerySchema() (*bq.TableSchema, error) {
+	fields := make([]*bq.TableFieldSchema, len(in.Columns))
+
+	for _, column := range in.Columns {
+		t, err := bigqueryColumnType(column.Type)
+		if err != nil {
+			return nil, fmt.Errorf("couldn't map column %s: %s", column.Name, err.Error())
+		}
+		field := &bq.TableFieldSchema{
+			Name: column.Name,
+			Type: t,
+		}
+		fields = append(fields, field)
+	}
+
+	return &bq.TableSchema{
+		Fields: fields,
+	}, nil
+}
+
+func bigqueryColumnType(t int) (string, error) {
+	if t == SMALLINT || t == INTEGER || t == BIGINT {
+		return "INTEGER", nil
+	}
+	if t == DECIMAL || t == DOUBLE {
+		return "FLOAT", nil
+	}
+	if t == BOOLEAN {
+		return "BOOLEAN", nil
+	}
+	if t == CHAR || t == VARCHAR {
+		return "STRING", nil
+	}
+	if t == DATE {
+		return "STRING", nil
+	}
+	if t == TIMESTAMP {
+		return "TIMESTAMP", nil
+	}
+
+	return "", fmt.Errorf("unexpected column type: %d", t)
 }
 
 func (t *TableSchema) String() string {
