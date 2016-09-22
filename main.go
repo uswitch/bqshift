@@ -9,13 +9,13 @@ import (
 )
 
 var (
-	config    = kingpin.Flag("config", "configuration file").Required().File()
-	accessKey = kingpin.Flag("awsAccessKeyId", "AWS access key").OverrideDefaultFromEnvar("AWS_ACCESS_KEY_ID").Required().String()
-	secretKey = kingpin.Flag("secretAccessKey", "AWS secret access key").OverrideDefaultFromEnvar("AWS_SECRET_ACCESS_KEY").Required().String()
-	project   = kingpin.Flag("project", "google project").OverrideDefaultFromEnvar("GCLOUD_PROJECT").Required().String()
-	overwrite = kingpin.Flag("overwrite", "overwrite bigquery table").Bool()
-	dataset   = kingpin.Arg("dataset", "destination bigquery dataset").Required().String()
-	table     = kingpin.Arg("table", "name of table").Required().String()
+	config    = kingpin.Flag("config", "Configuration file with S3 and Redshift credentials").Required().File()
+	accessKey = kingpin.Flag("access-key", "AWS access key. Defaults to $AWS_ACCESS_KEY_ID").OverrideDefaultFromEnvar("AWS_ACCESS_KEY_ID").Required().String()
+	secretKey = kingpin.Flag("secret-access-key", "AWS secret access key. Defaults to $AWS_SECRET_").OverrideDefaultFromEnvar("AWS_SECRET_ACCESS_KEY").Required().String()
+	project   = kingpin.Flag("project", "Google Project ID").OverrideDefaultFromEnvar("GCLOUD_PROJECT").Required().String()
+	overwrite = kingpin.Flag("overwrite", "Overwrite BigQuery table").Bool()
+	dataset   = kingpin.Arg("dataset", "Destination BigQuery dataset").Required().String()
+	table     = kingpin.Arg("table", "Redshift table name").Required().String()
 )
 
 var versionNumber string
