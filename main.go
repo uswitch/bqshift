@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/uswitch/bqshift/bigquery"
 	"github.com/uswitch/bqshift/redshift"
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -17,7 +18,18 @@ var (
 	table     = kingpin.Arg("table", "name of table").Required().String()
 )
 
+var versionNumber string
+var sha string
+
+func version() string {
+	if versionNumber == "" {
+		return "DEVELOPMENT"
+	}
+	return fmt.Sprintf("%s (%s)", versionNumber, sha)
+}
+
 func main() {
+	kingpin.Version(version())
 	kingpin.Parse()
 
 	credentials, err := ParseCredentialsConfiguration(*config)
