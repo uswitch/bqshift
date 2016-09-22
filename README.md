@@ -19,6 +19,14 @@ $ bqshift --config=config.example.yml <DEST DATASET> <REDSHIFT TABLE>
 
 ## Releasing
 
+We use [https://github.com/progrium/gh-release](https://github.com/progrium/gh-release) to tag and release artifacts. Install with:
+
+```
+$ go get github.com/progrium/gh-release
+```
+
+Then to release use:
+
 ```
 $ VERSION=<...> make gh-release
 ```
