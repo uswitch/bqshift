@@ -1,4 +1,4 @@
-.PHONY: release,clean
+.PHONY: release,clean,gh-release
 
 MAC = GOOS=darwin GOARCH=amd64
 LINUX = GOOS=linux GOARCH=amd64
@@ -23,6 +23,9 @@ target/mac/bqshift: $(SOURCES)
 
 target/linux/bqshift: $(SOURCES)
 	${LINUX} go build ${FLAGS} -o target/linux/bqshift .
+
+gh-release: release/bqshift-${VERSION}.tar.gz
+	gh-release create uswitch/bqshift ${VERSION}
 
 clean:
 	rm -rf release/
