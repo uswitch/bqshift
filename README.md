@@ -17,6 +17,12 @@ $ export GOOGLE_APPLICATION_CREDENTIALS=/path/to/creds.json
 $ bqshift --config=config.example.yml <DEST DATASET> <REDSHIFT TABLE>
 ```
 
+## Releasing
+
+```
+$ VERSION=<...> make gh-release
+```
+
 ## License
 
 Copyright (c) 2016, uSwitch 
