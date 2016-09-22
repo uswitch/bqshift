@@ -13,10 +13,8 @@ var (
 	secretKey = kingpin.Flag("secretAccessKey", "AWS secret access key").OverrideDefaultFromEnvar("AWS_SECRET_ACCESS_KEY").Required().String()
 	project   = kingpin.Flag("project", "google project").OverrideDefaultFromEnvar("GCLOUD_PROJECT").Required().String()
 	overwrite = kingpin.Flag("overwrite", "overwrite bigquery table").Bool()
-	wait      = kingpin.Flag("wait", "wait until load has successfully completed").Bool()
-
-	dataset = kingpin.Arg("dataset", "destination bigquery dataset").Required().String()
-	table   = kingpin.Arg("table", "name of table").Required().String()
+	dataset   = kingpin.Arg("dataset", "destination bigquery dataset").Required().String()
+	table     = kingpin.Arg("table", "name of table").Required().String()
 )
 
 func main() {
@@ -30,7 +28,6 @@ func main() {
 	config := &Configuration{
 		CredentialsConfiguration: credentials,
 		OverwriteBigQuery:        *overwrite,
-		WaitForLoad:              *wait,
 	}
 
 	shifter, err := NewShifter(config)

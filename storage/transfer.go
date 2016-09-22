@@ -5,6 +5,7 @@ import (
 	"fmt"
 	bq "github.com/uswitch/bqshift/bigquery"
 	"github.com/uswitch/bqshift/redshift"
+	"github.com/uswitch/bqshift/util"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2/google"
 	transfer "google.golang.org/api/storagetransfer/v1"
@@ -54,17 +55,21 @@ func (c *Client) blockForJobCompletion(createdJob *transfer.TransferJob) error {
 	ticks := time.Tick(30 * time.Second)
 
 	for _ = range ticks {
-		resp, err := c.service.TransferOperations.List("transferOperations").Filter(filter).Do()
+		resp, err := util.RetryOp(func() (interface{}, error) {
+			return c.service.TransferOperations.List("transferOperations").Filter(filter).Do()
+		})
+
 		if err != nil {
 			return fmt.Errorf("error listing operations: %s", err.Error())
 		}
 
-		if len(resp.Operations) != 1 {
+		ops := resp.(*transfer.ListOperationsResponse)
+		if len(ops.Operations) != 1 {
 			log.Println("waiting another 30s for transfer operation.")
 			continue
 		}
 
-		op := resp.Operations[0]
+		op := ops.Operations[0]
 		if op.Done {
 			if op.Error != nil {
 				return fmt.Errorf("transfer operation failed: %s", op.Error.Message)
@@ -127,13 +132,15 @@ func (c *Client) TransferToCloudStorage(source *redshift.UnloadResult) (*StoredR
 		},
 	}
 
-	created, err := c.service.TransferJobs.Create(job).Do()
+	created, err := util.RetryOp(func() (interface{}, error) {
+		return c.service.TransferJobs.Create(job).Do()
+	})
 	if err != nil {
 		return nil, err
 	}
 
 	log.Println("transfer requested, this may take a while.")
-	err = c.blockForJobCompletion(created)
+	err = c.blockForJobCompletion(created.(*transfer.TransferJob))
 	if err != nil {
 		return nil, err
 	}

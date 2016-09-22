@@ -62,16 +62,10 @@ func (s *shifter) Run(table string, config *bigquery.Configuration) error {
 		Overwrite:      s.config.OverwriteBigQuery,
 		Schema:         destSchema,
 	}
-	done, err := bq.LoadTable(spec)
+
+	err = bq.LoadTable(spec)
 	if err != nil {
 		return fmt.Errorf("error loading data into table: %s", err.Error())
-	}
-
-	if s.config.WaitForLoad {
-		result := <-done
-		if result.Error != nil {
-			return fmt.Errorf("error loading data into table: %s", result.Error.Error())
-		}
 	}
 
 	return nil
