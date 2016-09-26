@@ -11,6 +11,15 @@ type TableReference struct {
 	TableID   string
 }
 
+type DatasetReference struct {
+	ProjectID string
+	DatasetID string
+}
+
+func (ref *TableReference) DatasetReference() *DatasetReference {
+	return &DatasetReference{ref.ProjectID, ref.DatasetID}
+}
+
 func NewTableReference(projectId, dataset, table string) *TableReference {
 	return &TableReference{projectId, dataset, table}
 }

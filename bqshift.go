@@ -20,7 +20,7 @@ func (s *shifter) Run(table string, tableRef *bigquery.TableReference) error {
 	}
 
 	bq, err := bigquery.NewClient()
-	exists, err := bq.DatasetExists(tableRef.ProjectID, tableRef.DatasetID)
+	exists, err := bq.DatasetExists(tableRef.DatasetReference())
 	if err != nil {
 		return fmt.Errorf("error checking dataset: %s", err.Error())
 	}

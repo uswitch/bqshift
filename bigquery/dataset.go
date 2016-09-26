@@ -5,9 +5,9 @@ import (
 	bigquery "google.golang.org/api/bigquery/v2"
 )
 
-func (c *Client) DatasetExists(projectId, datasetName string) (bool, error) {
+func (c *Client) DatasetExists(ref *DatasetReference) (bool, error) {
 	resp, err := util.RetryOp(func() (interface{}, error) {
-		return c.service.Datasets.List(projectId).All(false).Do()
+		return c.service.Datasets.List(ref.ProjectID).All(false).Do()
 	})
 
 	if err != nil {
@@ -17,7 +17,7 @@ func (c *Client) DatasetExists(projectId, datasetName string) (bool, error) {
 	list := resp.(*bigquery.DatasetList)
 
 	for _, dataset := range list.Datasets {
-		if dataset.DatasetReference.DatasetId == datasetName {
+		if dataset.DatasetReference.DatasetId == ref.DatasetID {
 			return true, nil
 		}
 	}
