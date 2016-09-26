@@ -41,6 +41,10 @@ type S3Configuration struct {
 	SecretKey string `yaml:"secret_key"`
 }
 
+func (c S3Configuration) ToRedshiftCredentialsClause() string {
+	return fmt.Sprintf("aws_access_key_id=%s;aws_secret_access_key=%s", c.AccessKey, c.SecretKey)
+}
+
 func (c *RedshiftConnectionDetails) URLString() string {
 	return fmt.Sprintf("postgres://%s:%s@%s:%d/%s", c.User, c.Password, c.Host, c.Port, c.Database)
 }
