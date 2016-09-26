@@ -27,6 +27,17 @@ func ParseAWSConfiguration(file *os.File) (*AWSConfiguration, error) {
 	return &c, nil
 }
 
+type DatePartition struct {
+	DateExpression string
+	DateFilter     string
+}
+
+type RedshiftSource struct {
+	Table     string
+	Schema    *TableSchema
+	Partition *DatePartition
+}
+
 type RedshiftConnectionDetails struct {
 	Host     string `yaml:"host"`
 	Port     int    `yaml:"port"`

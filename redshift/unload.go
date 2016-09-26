@@ -8,8 +8,7 @@ import (
 type unloadOperation struct {
 	client *Client
 	config *AWSConfiguration
-	table  string
-	schema *TableSchema
+	source *RedshiftSource
 }
 
 type UnloadResult struct {
@@ -17,8 +16,8 @@ type UnloadResult struct {
 	ObjectPrefix string
 }
 
-func newUnloadOperation(client *Client, config *AWSConfiguration, table string, schema *TableSchema) *unloadOperation {
-	return &unloadOperation{client, config, table, schema}
+func newUnloadOperation(client *Client, config *AWSConfiguration, source *RedshiftSource) *unloadOperation {
+	return &unloadOperation{client, config, source}
 }
 
 func (op *unloadOperation) execute() (*UnloadResult, error) {
@@ -28,7 +27,7 @@ func (op *unloadOperation) execute() (*UnloadResult, error) {
 		return nil, err
 	}
 
-	result := &UnloadResult{op.config.S3.Bucket, op.table}
+	result := &UnloadResult{op.config.S3.Bucket, op.source.Table}
 
 	return result, nil
 }
@@ -51,17 +50,17 @@ func (op *unloadOperation) delimiter() string {
 
 func (op *unloadOperation) query() string {
 	var columns bytes.Buffer
-	for i := 0; i < len(op.schema.Columns); i++ {
+	for i := 0; i < len(op.source.Schema.Columns); i++ {
 		if i > 0 {
 			columns.WriteString(",")
 		}
-		columns.WriteString(op.schema.Columns[i].Name)
+		columns.WriteString(op.source.Schema.Columns[i].Name)
 	}
-	return fmt.Sprintf("SELECT %s FROM %s", columns.String(), op.table)
+	return fmt.Sprintf("SELECT %s FROM %s", columns.String(), op.source.Table)
 }
 
 func (op *unloadOperation) staging() string {
-	return fmt.Sprintf("s3://%s/%s/", op.config.S3.Bucket, op.table)
+	return fmt.Sprintf("s3://%s/%s/", op.config.S3.Bucket, op.source.Table)
 }
 
 func (op *unloadOperation) credentials() string {

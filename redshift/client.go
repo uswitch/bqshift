@@ -44,6 +44,10 @@ func (c *Client) Unload(table string) (*UnloadResult, error) {
 		return nil, fmt.Errorf("error extracting table schema: %s", err.Error())
 	}
 
-	op := newUnloadOperation(c, c.aws, table, schema)
+	source := &RedshiftSource{
+		Table:  table,
+		Schema: schema,
+	}
+	op := newUnloadOperation(c, c.aws, source)
 	return op.execute()
 }
