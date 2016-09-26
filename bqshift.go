@@ -13,7 +13,7 @@ type shifter struct {
 	config   *Configuration
 }
 
-func (s *shifter) Run(table string, tableRef *bigquery.TableReference) error {
+func (s *shifter) Run(table string, partition *redshift.DatePartition, tableRef *bigquery.TableReference) error {
 	storageClient, err := storage.NewClient(tableRef, s.config.AWS.S3)
 	if err != nil {
 		return err
@@ -34,12 +34,26 @@ func (s *shifter) Run(table string, tableRef *bigquery.TableReference) error {
 	}
 
 	log.Println("unloading to s3")
-	result, err := s.redshift.Unload(table)
-	if err != nil {
-		return fmt.Errorf("error unloading: %s", err.Error())
+	var unloaded *redshift.UnloadResult
+	// TODO extract these two flows into struct func
+	if partition == nil {
+		result, err := s.redshift.Unload(table)
+		if err != nil {
+			return fmt.Errorf("error unloading: %s", err.Error())
+		}
+		unloaded = result
 	}
+
+	if partition != nil {
+		result, err := s.redshift.UnloadPartition(table, partition)
+		if err != nil {
+			return fmt.Errorf("error unloading for partition %s: %s", partition, err.Error())
+		}
+		unloaded = result
+	}
+
 	log.Println("transferring to cloud storage")
-	stored, err := storageClient.TransferToCloudStorage(result)
+	stored, err := storageClient.TransferToCloudStorage(unloaded)
 	if err != nil {
 		return fmt.Errorf("error transferring to cloud storage: %s", err.Error())
 	}

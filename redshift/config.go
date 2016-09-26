@@ -34,6 +34,10 @@ type DatePartition struct {
 	DateFilter     time.Time // current partition date
 }
 
+func NewDatePartition(expression string, t time.Time) *DatePartition {
+	return &DatePartition{expression, t}
+}
+
 type RedshiftSource struct {
 	Table     string
 	Schema    *TableSchema
