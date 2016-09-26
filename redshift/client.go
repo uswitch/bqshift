@@ -6,12 +6,12 @@ import (
 )
 
 type Client struct {
-	redshift *RedshiftConfiguration
+	redshift *RedshiftConnectionDetails
 	s3       *S3Configuration
 	db       *sql.DB
 }
 
-func NewClient(config *RedshiftConfiguration, s3 *S3Configuration) (*Client, error) {
+func NewClient(config *RedshiftConnectionDetails, s3 *S3Configuration) (*Client, error) {
 	client := &Client{config, s3, nil}
 	client.Connect()
 

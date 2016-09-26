@@ -32,7 +32,7 @@ func main() {
 	kingpin.Version(version())
 	kingpin.Parse()
 
-	credentials, err := ParseCredentialsConfiguration(*config)
+	credentials, err := redshift.ParseAWSConfiguration(*config)
 	if err != nil {
 		log.Fatalln("error parsing redshift configuration:", err.Error())
 	}
