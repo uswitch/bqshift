@@ -6,6 +6,7 @@ import (
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
+	"time"
 )
 
 type AWSConfiguration struct {
@@ -29,8 +30,8 @@ func ParseAWSConfiguration(file *os.File) (*AWSConfiguration, error) {
 }
 
 type DatePartition struct {
-	DateExpression string
-	DateFilter     string
+	DateExpression string    // expression used to extract relevant date for each row
+	DateFilter     time.Time // current partition date
 }
 
 type RedshiftSource struct {

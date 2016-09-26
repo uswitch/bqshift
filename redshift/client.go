@@ -38,16 +38,22 @@ func (c *Client) execute(statement string, args ...interface{}) (sql.Result, err
 	return c.db.Exec(statement, args...)
 }
 
+func (c *Client) doUnload(source *RedshiftSource) (*UnloadResult, error) {
+	return newUnloadOperation(c, c.aws, source).execute()
+}
+
+func (c *Client) UnloadPartition(table string) (*UnloadResult, error) {
+	return nil, nil
+}
+
 func (c *Client) Unload(table string) (*UnloadResult, error) {
 	schema, err := c.ExtractSchema(table)
 	if err != nil {
 		return nil, fmt.Errorf("error extracting table schema: %s", err.Error())
 	}
-
 	source := &RedshiftSource{
 		Table:  table,
 		Schema: schema,
 	}
-	op := newUnloadOperation(c, c.aws, source)
-	return op.execute()
+	return c.doUnload(source)
 }
