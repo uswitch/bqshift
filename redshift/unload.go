@@ -1,7 +1,6 @@
 package redshift
 
 import (
-	"bytes"
 	"fmt"
 )
 
@@ -33,7 +32,7 @@ func (op *unloadOperation) execute() (*UnloadResult, error) {
 }
 
 func (op *unloadOperation) unloadStatement() string {
-	return fmt.Sprintf("UNLOAD ('%s') TO '%s' WITH CREDENTIALS '%s' %s", op.query(), op.staging(), op.credentials(), op.options())
+	return fmt.Sprintf("UNLOAD ('%s') TO '%s' WITH CREDENTIALS '%s' %s", op.source.SelectClause(), op.staging(), op.credentials(), op.options())
 }
 
 func (op *unloadOperation) options() string {
@@ -46,17 +45,6 @@ func DefaultDelimiter() string {
 
 func (op *unloadOperation) delimiter() string {
 	return DefaultDelimiter()
-}
-
-func (op *unloadOperation) query() string {
-	var columns bytes.Buffer
-	for i := 0; i < len(op.source.Schema.Columns); i++ {
-		if i > 0 {
-			columns.WriteString(",")
-		}
-		columns.WriteString(op.source.Schema.Columns[i].Name)
-	}
-	return fmt.Sprintf("SELECT %s FROM %s", columns.String(), op.source.Table)
 }
 
 func (op *unloadOperation) staging() string {

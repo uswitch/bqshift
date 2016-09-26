@@ -1,6 +1,7 @@
 package redshift
 
 import (
+	"bytes"
 	"fmt"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
@@ -36,6 +37,17 @@ type RedshiftSource struct {
 	Table     string
 	Schema    *TableSchema
 	Partition *DatePartition
+}
+
+func (s *RedshiftSource) SelectClause() string {
+	var columns bytes.Buffer
+	for i := 0; i < len(s.Schema.Columns); i++ {
+		if i > 0 {
+			columns.WriteString(",")
+		}
+		columns.WriteString(s.Schema.Columns[i].Name)
+	}
+	return fmt.Sprintf("SELECT %s FROM %s", columns.String(), s.Table)
 }
 
 type RedshiftConnectionDetails struct {
