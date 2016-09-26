@@ -6,20 +6,19 @@ import (
 )
 
 type Client struct {
-	redshift *RedshiftConnectionDetails
-	s3       *S3Configuration
-	db       *sql.DB
+	aws *AWSConfiguration
+	db  *sql.DB
 }
 
-func NewClient(config *RedshiftConnectionDetails, s3 *S3Configuration) (*Client, error) {
-	client := &Client{config, s3, nil}
+func NewClient(config *AWSConfiguration) (*Client, error) {
+	client := &Client{config, nil}
 	client.Connect()
 
 	return client, nil
 }
 
 func (c *Client) Connect() error {
-	db, err := sql.Open("postgres", c.redshift.URLString())
+	db, err := sql.Open("postgres", c.aws.Redshift.URLString())
 	if err != nil {
 		return fmt.Errorf("error connecting to redshift: %s", err.Error())
 	}
@@ -45,6 +44,6 @@ func (c *Client) Unload(table string) (*UnloadResult, error) {
 		return nil, fmt.Errorf("error extracting table schema: %s", err.Error())
 	}
 
-	op := newUnloadOperation(c, c.s3, table, schema)
+	op := newUnloadOperation(c, c.aws, table, schema)
 	return op.execute()
 }

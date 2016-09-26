@@ -14,7 +14,7 @@ type shifter struct {
 }
 
 func (s *shifter) Run(table string, tableRef *bigquery.TableReference) error {
-	storageClient, err := storage.NewClient(tableRef, s.config.CredentialsConfiguration.S3)
+	storageClient, err := storage.NewClient(tableRef, s.config.AWS.S3)
 	if err != nil {
 		return err
 	}
@@ -71,7 +71,7 @@ func (s *shifter) Run(table string, tableRef *bigquery.TableReference) error {
 }
 
 func NewShifter(config *Configuration) (*shifter, error) {
-	client, err := redshift.NewClient(config.CredentialsConfiguration.Redshift, config.CredentialsConfiguration.S3)
+	client, err := redshift.NewClient(config.AWS)
 	if err != nil {
 		return nil, err
 	}

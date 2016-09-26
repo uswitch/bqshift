@@ -5,7 +5,7 @@ import (
 )
 
 type Configuration struct {
-	OverwriteBigQuery        bool
-	CredentialsConfiguration *redshift.AWSConfiguration
-	Verbose                  bool
+	OverwriteBigQuery bool
+	AWS               *redshift.AWSConfiguration
+	Verbose           bool
 }

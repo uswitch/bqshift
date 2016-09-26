@@ -32,16 +32,16 @@ func main() {
 	kingpin.Version(version())
 	kingpin.Parse()
 
-	credentials, err := redshift.ParseAWSConfiguration(*config)
+	awsConfig, err := redshift.ParseAWSConfiguration(*config)
 	if err != nil {
 		log.Fatalln("error parsing redshift configuration:", err.Error())
 	}
-	credentials.S3.Credentials = &redshift.AWSCredentials{*accessKey, *secretKey}
-	config := &Configuration{
-		CredentialsConfiguration: credentials,
-		OverwriteBigQuery:        *overwrite,
-	}
+	awsConfig.S3.Credentials = &redshift.AWSCredentials{*accessKey, *secretKey}
 
+	config := &Configuration{
+		AWS:               awsConfig,
+		OverwriteBigQuery: *overwrite,
+	}
 	shifter, err := NewShifter(config)
 	if err != nil {
 		log.Fatalln(err.Error())

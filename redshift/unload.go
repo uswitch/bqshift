@@ -7,7 +7,7 @@ import (
 
 type unloadOperation struct {
 	client *Client
-	s3     *S3Configuration
+	config *AWSConfiguration
 	table  string
 	schema *TableSchema
 }
@@ -17,8 +17,8 @@ type UnloadResult struct {
 	ObjectPrefix string
 }
 
-func newUnloadOperation(client *Client, s3 *S3Configuration, table string, schema *TableSchema) *unloadOperation {
-	return &unloadOperation{client, s3, table, schema}
+func newUnloadOperation(client *Client, config *AWSConfiguration, table string, schema *TableSchema) *unloadOperation {
+	return &unloadOperation{client, config, table, schema}
 }
 
 func (op *unloadOperation) execute() (*UnloadResult, error) {
@@ -28,7 +28,7 @@ func (op *unloadOperation) execute() (*UnloadResult, error) {
 		return nil, err
 	}
 
-	result := &UnloadResult{op.s3.Bucket, op.table}
+	result := &UnloadResult{op.config.S3.Bucket, op.table}
 
 	return result, nil
 }
@@ -61,9 +61,9 @@ func (op *unloadOperation) query() string {
 }
 
 func (op *unloadOperation) staging() string {
-	return fmt.Sprintf("s3://%s/%s/", op.s3.Bucket, op.table)
+	return fmt.Sprintf("s3://%s/%s/", op.config.S3.Bucket, op.table)
 }
 
 func (op *unloadOperation) credentials() string {
-	return fmt.Sprintf("aws_access_key_id=%s;aws_secret_access_key=%s", op.s3.Credentials.AccessKey, op.s3.Credentials.SecretKey)
+	return fmt.Sprintf("aws_access_key_id=%s;aws_secret_access_key=%s", op.config.S3.Credentials.AccessKey, op.config.S3.Credentials.SecretKey)
 }
