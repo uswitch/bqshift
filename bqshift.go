@@ -13,20 +13,20 @@ type shifter struct {
 	config   *Configuration
 }
 
-func (s *shifter) Run(table string, config *bigquery.Configuration) error {
-	storageClient, err := storage.NewClient(config, s.config.CredentialsConfiguration.S3)
+func (s *shifter) Run(table string, tableRef *bigquery.TableReference) error {
+	storageClient, err := storage.NewClient(tableRef, s.config.CredentialsConfiguration.S3)
 	if err != nil {
 		return err
 	}
 
 	bq, err := bigquery.NewClient()
-	exists, err := bq.DatasetExists(config.ProjectID, config.DatasetName)
+	exists, err := bq.DatasetExists(tableRef.ProjectID, tableRef.DatasetID)
 	if err != nil {
 		return fmt.Errorf("error checking dataset: %s", err.Error())
 	}
 
 	if !exists {
-		return fmt.Errorf("dataset doesn't exist: %s", config.DatasetName)
+		return fmt.Errorf("dataset doesn't exist: %s", tableRef.DatasetID)
 	}
 
 	if err != nil {
@@ -54,9 +54,8 @@ func (s *shifter) Run(table string, config *bigquery.Configuration) error {
 	}
 
 	log.Println("loading into bigquery")
-	ref := bigquery.TableReference(config.ProjectID, config.DatasetName, table)
 	spec := &bigquery.LoadSpec{
-		TableReference: ref,
+		TableReference: tableRef,
 		BucketName:     stored.BucketName,
 		ObjectPrefix:   stored.Prefix,
 		Overwrite:      s.config.OverwriteBigQuery,

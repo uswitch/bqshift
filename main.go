@@ -47,7 +47,7 @@ func main() {
 		log.Fatalln(err.Error())
 	}
 
-	bq := bigquery.NewConfiguration(*project, *dataset, *table)
+	bq := bigquery.NewTableReference(*project, *dataset, *table)
 	err = shifter.Run(*table, bq)
 	if err != nil {
 		log.Fatalln(err.Error())

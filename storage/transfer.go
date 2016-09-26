@@ -15,11 +15,11 @@ import (
 
 type Client struct {
 	service  *transfer.Service
-	config   *bq.Configuration
+	table    *bq.TableReference
 	s3config *redshift.S3Configuration
 }
 
-func NewClient(config *bq.Configuration, s3 *redshift.S3Configuration) (*Client, error) {
+func NewClient(config *bq.TableReference, s3 *redshift.S3Configuration) (*Client, error) {
 	ctx := context.Background()
 	client, err := google.DefaultClient(ctx, transfer.CloudPlatformScope)
 	if err != nil {
@@ -102,7 +102,7 @@ func (c *Client) TransferToCloudStorage(source *redshift.UnloadResult) (*StoredR
 	job := &transfer.TransferJob{
 		Description: fmt.Sprintf("bqshift %s", source.ObjectPrefix),
 		Status:      "ENABLED",
-		ProjectId:   c.config.ProjectID,
+		ProjectId:   c.table.ProjectID,
 		Schedule: &transfer.Schedule{
 			ScheduleEndDate:   startDate,
 			ScheduleStartDate: startDate,

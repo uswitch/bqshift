@@ -9,34 +9,12 @@ import (
 	"time"
 )
 
-type TableRef struct {
-	ProjectID string
-	DatasetID string
-	TableID   string
-}
-
-func (ref *TableRef) ToGoogleReference() *bq.TableReference {
-	return &bq.TableReference{
-		DatasetId: ref.DatasetID,
-		ProjectId: ref.ProjectID,
-		TableId:   ref.TableID,
-	}
-}
-
-func (ref *TableRef) String() string {
-	return fmt.Sprintf("%s:%s.%s", ref.ProjectID, ref.DatasetID, ref.TableID)
-}
-
-func TableReference(projectId, datasetId, tableId string) *TableRef {
-	return &TableRef{projectId, datasetId, tableId}
-}
-
 func sourcePattern(bucket, prefix string) string {
 	return fmt.Sprintf("gs://%s/%s/*", bucket, prefix)
 }
 
 type LoadSpec struct {
-	TableReference *TableRef
+	TableReference *TableReference
 	BucketName     string
 	ObjectPrefix   string
 	Overwrite      bool

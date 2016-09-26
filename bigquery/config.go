@@ -1,11 +1,28 @@
 package bigquery
 
-type Configuration struct {
-	ProjectID   string
-	DatasetName string
-	TableName   string
+import (
+	"fmt"
+	bq "google.golang.org/api/bigquery/v2"
+)
+
+type TableReference struct {
+	ProjectID string
+	DatasetID string
+	TableID   string
 }
 
-func NewConfiguration(projectId, dataset, table string) *Configuration {
-	return &Configuration{projectId, dataset, table}
+func NewTableReference(projectId, dataset, table string) *TableReference {
+	return &TableReference{projectId, dataset, table}
+}
+
+func (ref *TableReference) ToGoogleReference() *bq.TableReference {
+	return &bq.TableReference{
+		DatasetId: ref.DatasetID,
+		ProjectId: ref.ProjectID,
+		TableId:   ref.TableID,
+	}
+}
+
+func (ref *TableReference) String() string {
+	return fmt.Sprintf("%s:%s.%s", ref.ProjectID, ref.DatasetID, ref.TableID)
 }
