@@ -118,8 +118,8 @@ func (c *Client) TransferToCloudStorage(source *redshift.UnloadResult) (*StoredR
 			},
 			AwsS3DataSource: &transfer.AwsS3Data{
 				AwsAccessKey: &transfer.AwsAccessKey{
-					AccessKeyId:     c.s3config.Credentials.AccessKey,
-					SecretAccessKey: c.s3config.Credentials.SecretKey,
+					AccessKeyId:     c.s3config.AccessKey,
+					SecretAccessKey: c.s3config.SecretKey,
 				},
 				BucketName: source.Bucket,
 			},

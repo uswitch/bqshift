@@ -36,13 +36,9 @@ type RedshiftConnectionDetails struct {
 }
 
 type S3Configuration struct {
-	Bucket      string `yaml:"bucket"`
-	Credentials *AWSCredentials
-}
-
-type AWSCredentials struct {
-	AccessKey string
-	SecretKey string
+	Bucket    string `yaml:"bucket"`
+	AccessKey string `yaml:"access_key"`
+	SecretKey string `yaml:"secret_key"`
 }
 
 func (c *RedshiftConnectionDetails) URLString() string {

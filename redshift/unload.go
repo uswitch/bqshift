@@ -65,5 +65,5 @@ func (op *unloadOperation) staging() string {
 }
 
 func (op *unloadOperation) credentials() string {
-	return fmt.Sprintf("aws_access_key_id=%s;aws_secret_access_key=%s", op.config.S3.Credentials.AccessKey, op.config.S3.Credentials.SecretKey)
+	return fmt.Sprintf("aws_access_key_id=%s;aws_secret_access_key=%s", op.config.S3.AccessKey, op.config.S3.SecretKey)
 }

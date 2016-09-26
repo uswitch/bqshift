@@ -36,7 +36,8 @@ func main() {
 	if err != nil {
 		log.Fatalln("error parsing redshift configuration:", err.Error())
 	}
-	awsConfig.S3.Credentials = &redshift.AWSCredentials{*accessKey, *secretKey}
+	awsConfig.S3.AccessKey = *accessKey
+	awsConfig.S3.SecretKey = *secretKey
 
 	config := &Configuration{
 		AWS:               awsConfig,
