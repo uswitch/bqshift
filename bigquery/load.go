@@ -19,6 +19,7 @@ type LoadSpec struct {
 	ObjectPrefix   string
 	Overwrite      bool
 	Schema         *bq.TableSchema
+	Partitioned    bool
 }
 
 type LoadCompleted struct {
@@ -55,17 +56,23 @@ func (c *Client) blockForJobCompletion(projectId string, createdJob *bq.Job) err
 func (c *Client) LoadTable(spec *LoadSpec) error {
 	pattern := sourcePattern(spec.BucketName, spec.ObjectPrefix)
 
+	load := &bq.JobConfigurationLoad{
+		CreateDisposition:   "CREATE_IF_NEEDED",
+		WriteDisposition:    "WRITE_EMPTY",
+		FieldDelimiter:      redshift.DefaultDelimiter(),
+		IgnoreUnknownValues: false,
+		SourceFormat:        "CSV",
+		SourceUris:          []string{pattern},
+		Schema:              spec.Schema,
+	}
+	if spec.Partitioned {
+		load.DestinationTable = spec.TableReference.ToPartitionedReference()
+	} else {
+		load.DestinationTable = spec.TableReference.ToGoogleReference()
+	}
+
 	config := &bq.JobConfiguration{
-		Load: &bq.JobConfigurationLoad{
-			CreateDisposition:   "CREATE_IF_NEEDED",
-			WriteDisposition:    "WRITE_EMPTY",
-			DestinationTable:    spec.TableReference.ToGoogleReference(),
-			FieldDelimiter:      redshift.DefaultDelimiter(),
-			IgnoreUnknownValues: false,
-			SourceFormat:        "CSV",
-			SourceUris:          []string{pattern},
-			Schema:              spec.Schema,
-		},
+		Load: load,
 	}
 
 	if spec.Overwrite {

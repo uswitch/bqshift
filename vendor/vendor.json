@@ -81,16 +81,16 @@
 			"revisionTime": "2016-04-08T01:06:28Z"
 		},
 		{
-			"checksumSHA1": "C9CLsuRdiJ8ihCo/ozGCTF7KkL4=",
+			"checksumSHA1": "LuEX6w6pTkZhLz5Ow+gAqxrhbLU=",
 			"path": "google.golang.org/api/bigquery/v2",
-			"revision": "9737cc9e103c00d06a8f3993361dec083df3d252",
-			"revisionTime": "2016-04-08T06:59:26Z"
+			"revision": "adba394bac5800ff2e620d040e9401528f5b7615",
+			"revisionTime": "2016-09-27T03:03:17Z"
 		},
 		{
-			"checksumSHA1": "0PgeEtxSD/Vg/53Vctpf0Lk9V/k=",
+			"checksumSHA1": "awFDzMy1r/KM9mrqgCI9WqkxXc8=",
 			"path": "google.golang.org/api/gensupport",
-			"revision": "9737cc9e103c00d06a8f3993361dec083df3d252",
-			"revisionTime": "2016-04-08T06:59:26Z"
+			"revision": "adba394bac5800ff2e620d040e9401528f5b7615",
+			"revisionTime": "2016-09-27T03:03:17Z"
 		},
 		{
 			"checksumSHA1": "yQREK/OWrz9PLljbr127+xFk6J0=",

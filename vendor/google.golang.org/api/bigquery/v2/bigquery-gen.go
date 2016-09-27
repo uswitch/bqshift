@@ -187,8 +187,8 @@ type BigtableColumn struct {
 	// column. The values are expected to be encoded using HBase
 	// Bytes.toBytes function when using the BINARY encoding value.
 	// Following BigQuery types are allowed (case-sensitive) - BYTES STRING
-	// INTEGER FLOAT BOOLEAN Defaut type is BYTES. 'type' can also be set at
-	// the column family level. However, the setting at this level takes
+	// INTEGER FLOAT BOOLEAN Default type is BYTES. 'type' can also be set
+	// at the column family level. However, the setting at this level takes
 	// precedence if 'type' is set at both levels.
 	Type string `json:"type,omitempty"`
 
@@ -236,7 +236,7 @@ type BigtableColumnFamily struct {
 	// column family. The values are expected to be encoded using HBase
 	// Bytes.toBytes function when using the BINARY encoding value.
 	// Following BigQuery types are allowed (case-sensitive) - BYTES STRING
-	// INTEGER FLOAT BOOLEAN Defaut type is BYTES. This can be overridden
+	// INTEGER FLOAT BOOLEAN Default type is BYTES. This can be overridden
 	// for a specific column by listing that column in 'columns' and
 	// specifying a type for it.
 	Type string `json:"type,omitempty"`
@@ -272,6 +272,12 @@ type BigtableOptions struct {
 	// not exposed in the table schema. Otherwise, they are read with BYTES
 	// type values. The default value is false.
 	IgnoreUnspecifiedColumnFamilies bool `json:"ignoreUnspecifiedColumnFamilies,omitempty"`
+
+	// ReadRowkeyAsString: [Optional] If field is true, then the rowkey
+	// column families will be read and converted to string. Otherwise they
+	// are read with BYTES type values and users need to manually cast them
+	// with CAST if necessary. The default value is false.
+	ReadRowkeyAsString bool `json:"readRowkeyAsString,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "ColumnFamilies") to
 	// unconditionally include in API requests. By default, fields with
@@ -330,7 +336,7 @@ type CsvOptions struct {
 	// file that BigQuery will skip when reading the data. The default value
 	// is 0. This property is useful if you have header rows in the file
 	// that should be skipped.
-	SkipLeadingRows int64 `json:"skipLeadingRows,omitempty"`
+	SkipLeadingRows int64 `json:"skipLeadingRows,omitempty,string"`
 
 	// ForceSendFields is a list of field names (e.g. "AllowJaggedRows") to
 	// unconditionally include in API requests. By default, fields with
@@ -366,7 +372,7 @@ type Dataset struct {
 	// DatasetReference: [Required] A reference that identifies the dataset.
 	DatasetReference *DatasetReference `json:"datasetReference,omitempty"`
 
-	// DefaultTableExpirationMs: [Experimental] The default lifetime of all
+	// DefaultTableExpirationMs: [Optional] The default lifetime of all
 	// tables in the dataset, in milliseconds. The minimum value is 3600000
 	// milliseconds (one hour). Once this property is set, all newly-created
 	// tables in the dataset will have an expirationTime property set to the
@@ -396,6 +402,16 @@ type Dataset struct {
 
 	// Kind: [Output-only] The resource type.
 	Kind string `json:"kind,omitempty"`
+
+	// Labels: [Experimental] The labels associated with this dataset. You
+	// can use these to organize and group your datasets. You can set this
+	// property when inserting or updating a dataset. Label keys and values
+	// can be no longer than 63 characters, can only contain letters,
+	// numeric characters, underscores and dashes. International characters
+	// are allowed. Label values are optional. Label keys must start with a
+	// letter and must be unique within a dataset. Both keys and values are
+	// additionally constrained to be <= 128 bytes in size.
+	Labels map[string]string `json:"labels,omitempty"`
 
 	// LastModifiedTime: [Output-only] The date when this dataset or any of
 	// its tables was last modified, in milliseconds since the epoch.
@@ -530,6 +546,10 @@ type DatasetListDatasets struct {
 	// Kind: The resource type. This property always returns the value
 	// "bigquery#dataset".
 	Kind string `json:"kind,omitempty"`
+
+	// Labels: [Experimental] The labels associated with this dataset. You
+	// can use these to organize and group your datasets.
+	Labels map[string]string `json:"labels,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "DatasetReference") to
 	// unconditionally include in API requests. By default, fields with
@@ -704,6 +724,10 @@ type ExternalDataConfiguration struct {
 	// CSV.
 	CsvOptions *CsvOptions `json:"csvOptions,omitempty"`
 
+	// GoogleSheetsOptions: [Optional] Additional options if sourceFormat is
+	// set to GOOGLE_SHEETS.
+	GoogleSheetsOptions *GoogleSheetsOptions `json:"googleSheetsOptions,omitempty"`
+
 	// IgnoreUnknownValues: [Optional] Indicates if BigQuery should allow
 	// extra values that are not represented in the table schema. If true,
 	// the extra values are ignored. If false, records with extra columns
@@ -730,20 +754,20 @@ type ExternalDataConfiguration struct {
 	Schema *TableSchema `json:"schema,omitempty"`
 
 	// SourceFormat: [Required] The data format. For CSV files, specify
-	// "CSV". For newline-delimited JSON, specify "NEWLINE_DELIMITED_JSON".
-	// For Avro files, specify "AVRO". For Google Cloud Datastore backups,
-	// specify "DATASTORE_BACKUP". [Experimental] For Google Cloud Bigtable,
-	// specify "BIGTABLE". Please note that reading from Google Cloud
-	// Bigtable is experimental and has to be enabled for your project.
-	// Please contact Google Cloud Support to enable this for your project.
+	// "CSV". For Google sheets, specify "GOOGLE_SHEETS". For
+	// newline-delimited JSON, specify "NEWLINE_DELIMITED_JSON". For Avro
+	// files, specify "AVRO". For Google Cloud Datastore backups, specify
+	// "DATASTORE_BACKUP". [Experimental] For Google Cloud Bigtable, specify
+	// "BIGTABLE". Please note that reading from Google Cloud Bigtable is
+	// experimental and has to be enabled for your project. Please contact
+	// Google Cloud Support to enable this for your project.
 	SourceFormat string `json:"sourceFormat,omitempty"`
 
 	// SourceUris: [Required] The fully-qualified URIs that point to your
 	// data in Google Cloud. For Google Cloud Storage URIs: Each URI can
 	// contain one '*' wildcard character and it must come after the
 	// 'bucket' name. Size limits related to load jobs apply to external
-	// data sources, plus an additional limit of 10 GB maximum size across
-	// all URIs. For Google Cloud Bigtable URIs: Exactly one URI can be
+	// data sources. For Google Cloud Bigtable URIs: Exactly one URI can be
 	// specified and it has be a fully specified and valid HTTPS URL for a
 	// Google Cloud Bigtable table. For Google Cloud Datastore backups,
 	// exactly one URI can be specified, and it must end with
@@ -793,6 +817,11 @@ type GetQueryResultsResponse struct {
 	// Kind: The resource type of the response.
 	Kind string `json:"kind,omitempty"`
 
+	// NumDmlAffectedRows: [Output-only, Experimental] The number of rows
+	// affected by a DML statement. Present only for DML statements INSERT,
+	// UPDATE or DELETE.
+	NumDmlAffectedRows int64 `json:"numDmlAffectedRows,omitempty,string"`
+
 	// PageToken: A token used for paging results.
 	PageToken string `json:"pageToken,omitempty"`
 
@@ -830,6 +859,37 @@ type GetQueryResultsResponse struct {
 
 func (s *GetQueryResultsResponse) MarshalJSON() ([]byte, error) {
 	type noMethod GetQueryResultsResponse
+	raw := noMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields)
+}
+
+type GoogleSheetsOptions struct {
+	// SkipLeadingRows: [Optional] The number of rows at the top of a sheet
+	// that BigQuery will skip when reading the data. The default value is
+	// 0. This property is useful if you have header rows that should be
+	// skipped. When autodetect is on, behavior is the following: *
+	// skipLeadingRows unspecified - Autodetect tries to detect headers in
+	// the first row. If they are not detected, the row is read as data.
+	// Otherwise data is read starting from the second row. *
+	// skipLeadingRows is 0 - Instructs autodetect that there are no headers
+	// and data should be read starting from the first row. *
+	// skipLeadingRows = N > 0 - Autodetect skips N-1 rows and tries to
+	// detect headers in row N. If headers are not detected, row N is just
+	// skipped. Otherwise row N is used to extract column names for the
+	// detected schema.
+	SkipLeadingRows int64 `json:"skipLeadingRows,omitempty,string"`
+
+	// ForceSendFields is a list of field names (e.g. "SkipLeadingRows") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+}
+
+func (s *GoogleSheetsOptions) MarshalJSON() ([]byte, error) {
+	type noMethod GoogleSheetsOptions
 	raw := noMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields)
 }
@@ -1008,6 +1068,10 @@ type JobConfigurationLoad struct {
 	// value is false.
 	AllowQuotedNewlines bool `json:"allowQuotedNewlines,omitempty"`
 
+	// Autodetect: [Experimental] Indicates if we should automatically infer
+	// the options and schema for CSV and JSON sources.
+	Autodetect bool `json:"autodetect,omitempty"`
+
 	// CreateDisposition: [Optional] Specifies whether the job is allowed to
 	// create new tables. The following values are supported:
 	// CREATE_IF_NEEDED: If the table does not exist, BigQuery creates the
@@ -1095,8 +1159,8 @@ type JobConfigurationLoad struct {
 
 	// SourceFormat: [Optional] The format of the data files. For CSV files,
 	// specify "CSV". For datastore backups, specify "DATASTORE_BACKUP". For
-	// newline-delimited JSON, specify "NEWLINE_DELIMITED_JSON". The default
-	// value is CSV.
+	// newline-delimited JSON, specify "NEWLINE_DELIMITED_JSON". For Avro,
+	// specify "AVRO". The default value is CSV.
 	SourceFormat string `json:"sourceFormat,omitempty"`
 
 	// SourceUris: [Required] The fully-qualified URIs that point to your
@@ -1170,6 +1234,12 @@ type JobConfigurationQuery struct {
 	// Default: 1
 	MaximumBillingTier *int64 `json:"maximumBillingTier,omitempty"`
 
+	// MaximumBytesBilled: [Optional] Limits the bytes billed for this job.
+	// Queries that will have bytes billed beyond this limit will fail
+	// (without incurring a charge). If unspecified, this will be set to
+	// your project default.
+	MaximumBytesBilled int64 `json:"maximumBytesBilled,omitempty,string"`
+
 	// PreserveNulls: [Deprecated] This property is deprecated.
 	PreserveNulls bool `json:"preserveNulls,omitempty"`
 
@@ -1189,11 +1259,11 @@ type JobConfigurationQuery struct {
 
 	// UseLegacySql: [Experimental] Specifies whether to use BigQuery's
 	// legacy SQL dialect for this query. The default value is true. If set
-	// to false, the query will use BigQuery's updated SQL dialect with
-	// improved standards compliance. When using BigQuery's updated SQL, the
-	// values of allowLargeResults and flattenResults are ignored. Queries
-	// with useLegacySql set to false will be run as if allowLargeResults is
-	// true and flattenResults is false.
+	// to false, the query will use BigQuery's standard SQL:
+	// https://cloud.google.com/bigquery/sql-reference/ When useLegacySql is
+	// set to false, the values of allowLargeResults and flattenResults are
+	// ignored; query will be run as if allowLargeResults is true and
+	// flattenResults is false.
 	UseLegacySql bool `json:"useLegacySql,omitempty"`
 
 	// UseQueryCache: [Optional] Whether to look for the result in the query
@@ -1437,14 +1507,23 @@ type JobStatistics2 struct {
 	// query cache.
 	CacheHit bool `json:"cacheHit,omitempty"`
 
+	// NumDmlAffectedRows: [Output-only, Experimental] The number of rows
+	// affected by a DML statement. Present only for DML statements INSERT,
+	// UPDATE or DELETE.
+	NumDmlAffectedRows int64 `json:"numDmlAffectedRows,omitempty,string"`
+
 	// QueryPlan: [Output-only, Experimental] Describes execution plan for
-	// the query as a list of stages.
+	// the query.
 	QueryPlan []*ExplainQueryStage `json:"queryPlan,omitempty"`
 
 	// ReferencedTables: [Output-only, Experimental] Referenced tables for
 	// the job. Queries that reference more than 50 tables will not have a
 	// complete list.
 	ReferencedTables []*TableReference `json:"referencedTables,omitempty"`
+
+	// Schema: [Output-only, Experimental] The schema of the results.
+	// Present only for successful dry run of non-legacy SQL queries.
+	Schema *TableSchema `json:"schema,omitempty"`
 
 	// TotalBytesBilled: [Output-only] Total bytes billed for the job.
 	TotalBytesBilled int64 `json:"totalBytesBilled,omitempty,string"`
@@ -1681,11 +1760,11 @@ type QueryRequest struct {
 
 	// UseLegacySql: [Experimental] Specifies whether to use BigQuery's
 	// legacy SQL dialect for this query. The default value is true. If set
-	// to false, the query will use BigQuery's updated SQL dialect with
-	// improved standards compliance. When using BigQuery's updated SQL, the
-	// values of allowLargeResults and flattenResults are ignored. Queries
-	// with useLegacySql set to false will be run as if allowLargeResults is
-	// true and flattenResults is false.
+	// to false, the query will use BigQuery's standard SQL:
+	// https://cloud.google.com/bigquery/sql-reference/ When useLegacySql is
+	// set to false, the values of allowLargeResults and flattenResults are
+	// ignored; query will be run as if allowLargeResults is true and
+	// flattenResults is false.
 	UseLegacySql bool `json:"useLegacySql,omitempty"`
 
 	// UseQueryCache: [Optional] Whether to look for the result in the query
@@ -1734,6 +1813,11 @@ type QueryResponse struct {
 
 	// Kind: The resource type.
 	Kind string `json:"kind,omitempty"`
+
+	// NumDmlAffectedRows: [Output-only, Experimental] The number of rows
+	// affected by a DML statement. Present only for DML statements INSERT,
+	// UPDATE or DELETE.
+	NumDmlAffectedRows int64 `json:"numDmlAffectedRows,omitempty,string"`
 
 	// PageToken: A token used for paging results.
 	PageToken string `json:"pageToken,omitempty"`
@@ -1849,6 +1933,10 @@ type Table struct {
 	// any data in the streaming buffer.
 	NumBytes int64 `json:"numBytes,omitempty,string"`
 
+	// NumLongTermBytes: [Output-only] The number of bytes in the table that
+	// are considered "long-term storage".
+	NumLongTermBytes int64 `json:"numLongTermBytes,omitempty,string"`
+
 	// NumRows: [Output-only] The number of rows of data in this table,
 	// excluding any data in the streaming buffer.
 	NumRows uint64 `json:"numRows,omitempty,string"`
@@ -1868,6 +1956,10 @@ type Table struct {
 
 	// TableReference: [Required] Reference describing the ID of this table.
 	TableReference *TableReference `json:"tableReference,omitempty"`
+
+	// TimePartitioning: [Experimental] If specified, configures time-based
+	// partitioning for this table.
+	TimePartitioning *TimePartitioning `json:"timePartitioning,omitempty"`
 
 	// Type: [Output-only] Describes the table type. The following values
 	// are supported: TABLE: A normal BigQuery table. VIEW: A virtual table
@@ -2088,8 +2180,8 @@ type TableFieldSchema struct {
 	Name string `json:"name,omitempty"`
 
 	// Type: [Required] The field data type. Possible values include STRING,
-	// INTEGER, FLOAT, BOOLEAN, TIMESTAMP or RECORD (where RECORD indicates
-	// that the field contains a nested schema).
+	// BYTES, INTEGER, FLOAT, BOOLEAN, TIMESTAMP or RECORD (where RECORD
+	// indicates that the field contains a nested schema).
 	Type string `json:"type,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "Description") to
@@ -2239,6 +2331,30 @@ func (s *TableSchema) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields)
 }
 
+type TimePartitioning struct {
+	// ExpirationMs: [Optional] Number of milliseconds for which to keep the
+	// storage for a partition.
+	ExpirationMs int64 `json:"expirationMs,omitempty,string"`
+
+	// Type: [Required] The only type supported is DAY, which will generate
+	// one partition per day based on data loading time.
+	Type string `json:"type,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "ExpirationMs") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+}
+
+func (s *TimePartitioning) MarshalJSON() ([]byte, error) {
+	type noMethod TimePartitioning
+	raw := noMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields)
+}
+
 type UserDefinedFunctionResource struct {
 	// InlineCode: [Pick one] An inline resource that contains code for a
 	// user-defined function (UDF). Providing a inline code resource is
@@ -2268,6 +2384,13 @@ type ViewDefinition struct {
 	// Query: [Required] A query that BigQuery executes when the view is
 	// referenced.
 	Query string `json:"query,omitempty"`
+
+	// UseLegacySql: [Experimental] Specifies whether to use BigQuery's
+	// legacy SQL for this view. The default value is true. If set to false,
+	// the view will use BigQuery's standard SQL:
+	// https://cloud.google.com/bigquery/sql-reference/ Queries and views
+	// that reference this view must use the same flag value.
+	UseLegacySql bool `json:"useLegacySql,omitempty"`
 
 	// UserDefinedFunctionResources: [Experimental] Describes user-defined
 	// function resources used in the query.
@@ -2334,20 +2457,19 @@ func (c *DatasetsDeleteCall) Context(ctx context.Context) *DatasetsDeleteCall {
 }
 
 func (c *DatasetsDeleteCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "projects/{projectId}/datasets/{datasetId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("DELETE", urls, body)
+	req.Header = reqHeaders
 	googleapi.Expand(req.URL, map[string]string{
 		"projectId": c.projectId,
 		"datasetId": c.datasetId,
 	})
-	req.Header.Set("User-Agent", c.s.userAgent())
-	if c.ctx_ != nil {
-		return ctxhttp.Do(c.ctx_, c.s.client, req)
-	}
-	return c.s.client.Do(req)
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
 }
 
 // Do executes the "bigquery.datasets.delete" call.
@@ -2444,23 +2566,22 @@ func (c *DatasetsGetCall) Context(ctx context.Context) *DatasetsGetCall {
 }
 
 func (c *DatasetsGetCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	if c.ifNoneMatch_ != "" {
+		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
+	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "projects/{projectId}/datasets/{datasetId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
+	req.Header = reqHeaders
 	googleapi.Expand(req.URL, map[string]string{
 		"projectId": c.projectId,
 		"datasetId": c.datasetId,
 	})
-	req.Header.Set("User-Agent", c.s.userAgent())
-	if c.ifNoneMatch_ != "" {
-		req.Header.Set("If-None-Match", c.ifNoneMatch_)
-	}
-	if c.ctx_ != nil {
-		return ctxhttp.Do(c.ctx_, c.s.client, req)
-	}
-	return c.s.client.Do(req)
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
 }
 
 // Do executes the "bigquery.datasets.get" call.
@@ -2495,7 +2616,8 @@ func (c *DatasetsGetCall) Do(opts ...googleapi.CallOption) (*Dataset, error) {
 			HTTPStatusCode: res.StatusCode,
 		},
 	}
-	if err := json.NewDecoder(res.Body).Decode(&ret); err != nil {
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2569,25 +2691,23 @@ func (c *DatasetsInsertCall) Context(ctx context.Context) *DatasetsInsertCall {
 }
 
 func (c *DatasetsInsertCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.dataset)
 	if err != nil {
 		return nil, err
 	}
-	ctype := "application/json"
+	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "projects/{projectId}/datasets")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
+	req.Header = reqHeaders
 	googleapi.Expand(req.URL, map[string]string{
 		"projectId": c.projectId,
 	})
-	req.Header.Set("Content-Type", ctype)
-	req.Header.Set("User-Agent", c.s.userAgent())
-	if c.ctx_ != nil {
-		return ctxhttp.Do(c.ctx_, c.s.client, req)
-	}
-	return c.s.client.Do(req)
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
 }
 
 // Do executes the "bigquery.datasets.insert" call.
@@ -2622,7 +2742,8 @@ func (c *DatasetsInsertCall) Do(opts ...googleapi.CallOption) (*Dataset, error) 
 			HTTPStatusCode: res.StatusCode,
 		},
 	}
-	if err := json.NewDecoder(res.Body).Decode(&ret); err != nil {
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2681,6 +2802,18 @@ func (c *DatasetsListCall) All(all bool) *DatasetsListCall {
 	return c
 }
 
+// Filter sets the optional parameter "filter": An expression for
+// filtering the results of the request by label. The syntax is
+// "labels.[:]". Multiple filters can be ANDed together by connecting
+// with a space. Example: "labels.department:receiving labels.active".
+// See
+// https://cloud.google.com/bigquery/docs/labeling-datasets#filtering_datasets_using_labels for
+// details.
+func (c *DatasetsListCall) Filter(filter string) *DatasetsListCall {
+	c.urlParams_.Set("filter", filter)
+	return c
+}
+
 // MaxResults sets the optional parameter "maxResults": The maximum
 // number of results to return
 func (c *DatasetsListCall) MaxResults(maxResults int64) *DatasetsListCall {
@@ -2722,22 +2855,21 @@ func (c *DatasetsListCall) Context(ctx context.Context) *DatasetsListCall {
 }
 
 func (c *DatasetsListCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	if c.ifNoneMatch_ != "" {
+		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
+	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "projects/{projectId}/datasets")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
+	req.Header = reqHeaders
 	googleapi.Expand(req.URL, map[string]string{
 		"projectId": c.projectId,
 	})
-	req.Header.Set("User-Agent", c.s.userAgent())
-	if c.ifNoneMatch_ != "" {
-		req.Header.Set("If-None-Match", c.ifNoneMatch_)
-	}
-	if c.ctx_ != nil {
-		return ctxhttp.Do(c.ctx_, c.s.client, req)
-	}
-	return c.s.client.Do(req)
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
 }
 
 // Do executes the "bigquery.datasets.list" call.
@@ -2772,7 +2904,8 @@ func (c *DatasetsListCall) Do(opts ...googleapi.CallOption) (*DatasetList, error
 			HTTPStatusCode: res.StatusCode,
 		},
 	}
-	if err := json.NewDecoder(res.Body).Decode(&ret); err != nil {
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2788,6 +2921,11 @@ func (c *DatasetsListCall) Do(opts ...googleapi.CallOption) (*DatasetList, error
 	//       "description": "Whether to list all datasets, including hidden ones",
 	//       "location": "query",
 	//       "type": "boolean"
+	//     },
+	//     "filter": {
+	//       "description": "An expression for filtering the results of the request by label. The syntax is \"labels.[:]\". Multiple filters can be ANDed together by connecting with a space. Example: \"labels.department:receiving labels.active\". See https://cloud.google.com/bigquery/docs/labeling-datasets#filtering_datasets_using_labels for details.",
+	//       "location": "query",
+	//       "type": "string"
 	//     },
 	//     "maxResults": {
 	//       "description": "The maximum number of results to return",
@@ -2881,26 +3019,24 @@ func (c *DatasetsPatchCall) Context(ctx context.Context) *DatasetsPatchCall {
 }
 
 func (c *DatasetsPatchCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.dataset)
 	if err != nil {
 		return nil, err
 	}
-	ctype := "application/json"
+	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "projects/{projectId}/datasets/{datasetId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PATCH", urls, body)
+	req.Header = reqHeaders
 	googleapi.Expand(req.URL, map[string]string{
 		"projectId": c.projectId,
 		"datasetId": c.datasetId,
 	})
-	req.Header.Set("Content-Type", ctype)
-	req.Header.Set("User-Agent", c.s.userAgent())
-	if c.ctx_ != nil {
-		return ctxhttp.Do(c.ctx_, c.s.client, req)
-	}
-	return c.s.client.Do(req)
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
 }
 
 // Do executes the "bigquery.datasets.patch" call.
@@ -2935,7 +3071,8 @@ func (c *DatasetsPatchCall) Do(opts ...googleapi.CallOption) (*Dataset, error) {
 			HTTPStatusCode: res.StatusCode,
 		},
 	}
-	if err := json.NewDecoder(res.Body).Decode(&ret); err != nil {
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3015,26 +3152,24 @@ func (c *DatasetsUpdateCall) Context(ctx context.Context) *DatasetsUpdateCall {
 }
 
 func (c *DatasetsUpdateCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.dataset)
 	if err != nil {
 		return nil, err
 	}
-	ctype := "application/json"
+	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "projects/{projectId}/datasets/{datasetId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PUT", urls, body)
+	req.Header = reqHeaders
 	googleapi.Expand(req.URL, map[string]string{
 		"projectId": c.projectId,
 		"datasetId": c.datasetId,
 	})
-	req.Header.Set("Content-Type", ctype)
-	req.Header.Set("User-Agent", c.s.userAgent())
-	if c.ctx_ != nil {
-		return ctxhttp.Do(c.ctx_, c.s.client, req)
-	}
-	return c.s.client.Do(req)
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
 }
 
 // Do executes the "bigquery.datasets.update" call.
@@ -3069,7 +3204,8 @@ func (c *DatasetsUpdateCall) Do(opts ...googleapi.CallOption) (*Dataset, error) 
 			HTTPStatusCode: res.StatusCode,
 		},
 	}
-	if err := json.NewDecoder(res.Body).Decode(&ret); err != nil {
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3148,20 +3284,19 @@ func (c *JobsCancelCall) Context(ctx context.Context) *JobsCancelCall {
 }
 
 func (c *JobsCancelCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "project/{projectId}/jobs/{jobId}/cancel")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
+	req.Header = reqHeaders
 	googleapi.Expand(req.URL, map[string]string{
 		"projectId": c.projectId,
 		"jobId":     c.jobId,
 	})
-	req.Header.Set("User-Agent", c.s.userAgent())
-	if c.ctx_ != nil {
-		return ctxhttp.Do(c.ctx_, c.s.client, req)
-	}
-	return c.s.client.Do(req)
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
 }
 
 // Do executes the "bigquery.jobs.cancel" call.
@@ -3196,7 +3331,8 @@ func (c *JobsCancelCall) Do(opts ...googleapi.CallOption) (*JobCancelResponse, e
 			HTTPStatusCode: res.StatusCode,
 		},
 	}
-	if err := json.NewDecoder(res.Body).Decode(&ret); err != nil {
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3282,23 +3418,22 @@ func (c *JobsGetCall) Context(ctx context.Context) *JobsGetCall {
 }
 
 func (c *JobsGetCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	if c.ifNoneMatch_ != "" {
+		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
+	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "projects/{projectId}/jobs/{jobId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
+	req.Header = reqHeaders
 	googleapi.Expand(req.URL, map[string]string{
 		"projectId": c.projectId,
 		"jobId":     c.jobId,
 	})
-	req.Header.Set("User-Agent", c.s.userAgent())
-	if c.ifNoneMatch_ != "" {
-		req.Header.Set("If-None-Match", c.ifNoneMatch_)
-	}
-	if c.ctx_ != nil {
-		return ctxhttp.Do(c.ctx_, c.s.client, req)
-	}
-	return c.s.client.Do(req)
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
 }
 
 // Do executes the "bigquery.jobs.get" call.
@@ -3333,7 +3468,8 @@ func (c *JobsGetCall) Do(opts ...googleapi.CallOption) (*Job, error) {
 			HTTPStatusCode: res.StatusCode,
 		},
 	}
-	if err := json.NewDecoder(res.Body).Decode(&ret); err != nil {
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3448,23 +3584,22 @@ func (c *JobsGetQueryResultsCall) Context(ctx context.Context) *JobsGetQueryResu
 }
 
 func (c *JobsGetQueryResultsCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	if c.ifNoneMatch_ != "" {
+		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
+	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "projects/{projectId}/queries/{jobId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
+	req.Header = reqHeaders
 	googleapi.Expand(req.URL, map[string]string{
 		"projectId": c.projectId,
 		"jobId":     c.jobId,
 	})
-	req.Header.Set("User-Agent", c.s.userAgent())
-	if c.ifNoneMatch_ != "" {
-		req.Header.Set("If-None-Match", c.ifNoneMatch_)
-	}
-	if c.ctx_ != nil {
-		return ctxhttp.Do(c.ctx_, c.s.client, req)
-	}
-	return c.s.client.Do(req)
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
 }
 
 // Do executes the "bigquery.jobs.getQueryResults" call.
@@ -3499,7 +3634,8 @@ func (c *JobsGetQueryResultsCall) Do(opts ...googleapi.CallOption) (*GetQueryRes
 			HTTPStatusCode: res.StatusCode,
 		},
 	}
-	if err := json.NewDecoder(res.Body).Decode(&ret); err != nil {
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3590,7 +3726,7 @@ type JobsInsertCall struct {
 	job              *Job
 	urlParams_       gensupport.URLParams
 	media_           io.Reader
-	resumableBuffer_ *gensupport.ResumableBuffer
+	mediaBuffer_     *gensupport.MediaBuffer
 	mediaType_       string
 	mediaSize_       int64 // mediaSize, if known.  Used only for calls to progressUpdater_.
 	progressUpdater_ googleapi.ProgressUpdater
@@ -3620,7 +3756,7 @@ func (c *JobsInsertCall) Media(r io.Reader, options ...googleapi.MediaOption) *J
 	if !opts.ForceEmptyContentType {
 		r, c.mediaType_ = gensupport.DetermineContentType(r, opts.ContentType)
 	}
-	c.media_, c.resumableBuffer_ = gensupport.PrepareUpload(r, chunkSize)
+	c.media_, c.mediaBuffer_ = gensupport.PrepareUpload(r, chunkSize)
 	return c
 }
 
@@ -3637,7 +3773,7 @@ func (c *JobsInsertCall) ResumableMedia(ctx context.Context, r io.ReaderAt, size
 	c.ctx_ = ctx
 	rdr := gensupport.ReaderAtToReader(r, size)
 	rdr, c.mediaType_ = gensupport.DetermineContentType(rdr, mediaType)
-	c.resumableBuffer_ = gensupport.NewResumableBuffer(rdr, googleapi.DefaultUploadChunkSize)
+	c.mediaBuffer_ = gensupport.NewMediaBuffer(rdr, googleapi.DefaultUploadChunkSize)
 	c.media_ = nil
 	c.mediaSize_ = size
 	return c
@@ -3671,42 +3807,44 @@ func (c *JobsInsertCall) Context(ctx context.Context) *JobsInsertCall {
 }
 
 func (c *JobsInsertCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.job)
 	if err != nil {
 		return nil, err
 	}
-	ctype := "application/json"
+	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "projects/{projectId}/jobs")
-	if c.media_ != nil || c.resumableBuffer_ != nil {
+	if c.media_ != nil || c.mediaBuffer_ != nil {
 		urls = strings.Replace(urls, "https://www.googleapis.com/", "https://www.googleapis.com/upload/", 1)
 		protocol := "multipart"
-		if c.resumableBuffer_ != nil {
+		if c.mediaBuffer_ != nil {
 			protocol = "resumable"
 		}
 		c.urlParams_.Set("uploadType", protocol)
 	}
-	urls += "?" + c.urlParams_.Encode()
+	if body == nil {
+		body = new(bytes.Buffer)
+		reqHeaders.Set("Content-Type", "application/json")
+	}
 	if c.media_ != nil {
-		var combined io.ReadCloser
-		combined, ctype = gensupport.CombineBodyMedia(body, ctype, c.media_, c.mediaType_)
+		combined, ctype := gensupport.CombineBodyMedia(body, "application/json", c.media_, c.mediaType_)
 		defer combined.Close()
+		reqHeaders.Set("Content-Type", ctype)
 		body = combined
 	}
+	if c.mediaBuffer_ != nil && c.mediaType_ != "" {
+		reqHeaders.Set("X-Upload-Content-Type", c.mediaType_)
+	}
+	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
+	req.Header = reqHeaders
 	googleapi.Expand(req.URL, map[string]string{
 		"projectId": c.projectId,
 	})
-	if c.resumableBuffer_ != nil && c.mediaType_ != "" {
-		req.Header.Set("X-Upload-Content-Type", c.mediaType_)
-	}
-	req.Header.Set("Content-Type", ctype)
-	req.Header.Set("User-Agent", c.s.userAgent())
-	if c.ctx_ != nil {
-		return ctxhttp.Do(c.ctx_, c.s.client, req)
-	}
-	return c.s.client.Do(req)
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
 }
 
 // Do executes the "bigquery.jobs.insert" call.
@@ -3735,13 +3873,13 @@ func (c *JobsInsertCall) Do(opts ...googleapi.CallOption) (*Job, error) {
 	if err := googleapi.CheckResponse(res); err != nil {
 		return nil, err
 	}
-	if c.resumableBuffer_ != nil {
+	if c.mediaBuffer_ != nil {
 		loc := res.Header.Get("Location")
 		rx := &gensupport.ResumableUpload{
 			Client:    c.s.client,
 			UserAgent: c.s.userAgent(),
 			URI:       loc,
-			Media:     c.resumableBuffer_,
+			Media:     c.mediaBuffer_,
 			MediaType: c.mediaType_,
 			Callback: func(curr int64) {
 				if c.progressUpdater_ != nil {
@@ -3768,7 +3906,8 @@ func (c *JobsInsertCall) Do(opts ...googleapi.CallOption) (*Job, error) {
 			HTTPStatusCode: res.StatusCode,
 		},
 	}
-	if err := json.NewDecoder(res.Body).Decode(&ret); err != nil {
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3913,22 +4052,21 @@ func (c *JobsListCall) Context(ctx context.Context) *JobsListCall {
 }
 
 func (c *JobsListCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	if c.ifNoneMatch_ != "" {
+		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
+	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "projects/{projectId}/jobs")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
+	req.Header = reqHeaders
 	googleapi.Expand(req.URL, map[string]string{
 		"projectId": c.projectId,
 	})
-	req.Header.Set("User-Agent", c.s.userAgent())
-	if c.ifNoneMatch_ != "" {
-		req.Header.Set("If-None-Match", c.ifNoneMatch_)
-	}
-	if c.ctx_ != nil {
-		return ctxhttp.Do(c.ctx_, c.s.client, req)
-	}
-	return c.s.client.Do(req)
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
 }
 
 // Do executes the "bigquery.jobs.list" call.
@@ -3963,7 +4101,8 @@ func (c *JobsListCall) Do(opts ...googleapi.CallOption) (*JobList, error) {
 			HTTPStatusCode: res.StatusCode,
 		},
 	}
-	if err := json.NewDecoder(res.Body).Decode(&ret); err != nil {
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4097,25 +4236,23 @@ func (c *JobsQueryCall) Context(ctx context.Context) *JobsQueryCall {
 }
 
 func (c *JobsQueryCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.queryrequest)
 	if err != nil {
 		return nil, err
 	}
-	ctype := "application/json"
+	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "projects/{projectId}/queries")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
+	req.Header = reqHeaders
 	googleapi.Expand(req.URL, map[string]string{
 		"projectId": c.projectId,
 	})
-	req.Header.Set("Content-Type", ctype)
-	req.Header.Set("User-Agent", c.s.userAgent())
-	if c.ctx_ != nil {
-		return ctxhttp.Do(c.ctx_, c.s.client, req)
-	}
-	return c.s.client.Do(req)
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
 }
 
 // Do executes the "bigquery.jobs.query" call.
@@ -4150,7 +4287,8 @@ func (c *JobsQueryCall) Do(opts ...googleapi.CallOption) (*QueryResponse, error)
 			HTTPStatusCode: res.StatusCode,
 		},
 	}
-	if err := json.NewDecoder(res.Body).Decode(&ret); err != nil {
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4242,20 +4380,18 @@ func (c *ProjectsListCall) Context(ctx context.Context) *ProjectsListCall {
 }
 
 func (c *ProjectsListCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	if c.ifNoneMatch_ != "" {
+		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
+	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "projects")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
-	googleapi.SetOpaque(req.URL)
-	req.Header.Set("User-Agent", c.s.userAgent())
-	if c.ifNoneMatch_ != "" {
-		req.Header.Set("If-None-Match", c.ifNoneMatch_)
-	}
-	if c.ctx_ != nil {
-		return ctxhttp.Do(c.ctx_, c.s.client, req)
-	}
-	return c.s.client.Do(req)
+	req.Header = reqHeaders
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
 }
 
 // Do executes the "bigquery.projects.list" call.
@@ -4290,7 +4426,8 @@ func (c *ProjectsListCall) Do(opts ...googleapi.CallOption) (*ProjectList, error
 			HTTPStatusCode: res.StatusCode,
 		},
 	}
-	if err := json.NewDecoder(res.Body).Decode(&ret); err != nil {
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4385,27 +4522,25 @@ func (c *TabledataInsertAllCall) Context(ctx context.Context) *TabledataInsertAl
 }
 
 func (c *TabledataInsertAllCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.tabledatainsertallrequest)
 	if err != nil {
 		return nil, err
 	}
-	ctype := "application/json"
+	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "projects/{projectId}/datasets/{datasetId}/tables/{tableId}/insertAll")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
+	req.Header = reqHeaders
 	googleapi.Expand(req.URL, map[string]string{
 		"projectId": c.projectId,
 		"datasetId": c.datasetId,
 		"tableId":   c.tableId,
 	})
-	req.Header.Set("Content-Type", ctype)
-	req.Header.Set("User-Agent", c.s.userAgent())
-	if c.ctx_ != nil {
-		return ctxhttp.Do(c.ctx_, c.s.client, req)
-	}
-	return c.s.client.Do(req)
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
 }
 
 // Do executes the "bigquery.tabledata.insertAll" call.
@@ -4440,7 +4575,8 @@ func (c *TabledataInsertAllCall) Do(opts ...googleapi.CallOption) (*TableDataIns
 			HTTPStatusCode: res.StatusCode,
 		},
 	}
-	if err := json.NewDecoder(res.Body).Decode(&ret); err != nil {
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4559,24 +4695,23 @@ func (c *TabledataListCall) Context(ctx context.Context) *TabledataListCall {
 }
 
 func (c *TabledataListCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	if c.ifNoneMatch_ != "" {
+		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
+	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "projects/{projectId}/datasets/{datasetId}/tables/{tableId}/data")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
+	req.Header = reqHeaders
 	googleapi.Expand(req.URL, map[string]string{
 		"projectId": c.projectId,
 		"datasetId": c.datasetId,
 		"tableId":   c.tableId,
 	})
-	req.Header.Set("User-Agent", c.s.userAgent())
-	if c.ifNoneMatch_ != "" {
-		req.Header.Set("If-None-Match", c.ifNoneMatch_)
-	}
-	if c.ctx_ != nil {
-		return ctxhttp.Do(c.ctx_, c.s.client, req)
-	}
-	return c.s.client.Do(req)
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
 }
 
 // Do executes the "bigquery.tabledata.list" call.
@@ -4611,7 +4746,8 @@ func (c *TabledataListCall) Do(opts ...googleapi.CallOption) (*TableDataList, er
 			HTTPStatusCode: res.StatusCode,
 		},
 	}
-	if err := json.NewDecoder(res.Body).Decode(&ret); err != nil {
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4733,21 +4869,20 @@ func (c *TablesDeleteCall) Context(ctx context.Context) *TablesDeleteCall {
 }
 
 func (c *TablesDeleteCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "projects/{projectId}/datasets/{datasetId}/tables/{tableId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("DELETE", urls, body)
+	req.Header = reqHeaders
 	googleapi.Expand(req.URL, map[string]string{
 		"projectId": c.projectId,
 		"datasetId": c.datasetId,
 		"tableId":   c.tableId,
 	})
-	req.Header.Set("User-Agent", c.s.userAgent())
-	if c.ctx_ != nil {
-		return ctxhttp.Do(c.ctx_, c.s.client, req)
-	}
-	return c.s.client.Do(req)
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
 }
 
 // Do executes the "bigquery.tables.delete" call.
@@ -4850,24 +4985,23 @@ func (c *TablesGetCall) Context(ctx context.Context) *TablesGetCall {
 }
 
 func (c *TablesGetCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	if c.ifNoneMatch_ != "" {
+		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
+	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "projects/{projectId}/datasets/{datasetId}/tables/{tableId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
+	req.Header = reqHeaders
 	googleapi.Expand(req.URL, map[string]string{
 		"projectId": c.projectId,
 		"datasetId": c.datasetId,
 		"tableId":   c.tableId,
 	})
-	req.Header.Set("User-Agent", c.s.userAgent())
-	if c.ifNoneMatch_ != "" {
-		req.Header.Set("If-None-Match", c.ifNoneMatch_)
-	}
-	if c.ctx_ != nil {
-		return ctxhttp.Do(c.ctx_, c.s.client, req)
-	}
-	return c.s.client.Do(req)
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
 }
 
 // Do executes the "bigquery.tables.get" call.
@@ -4902,7 +5036,8 @@ func (c *TablesGetCall) Do(opts ...googleapi.CallOption) (*Table, error) {
 			HTTPStatusCode: res.StatusCode,
 		},
 	}
-	if err := json.NewDecoder(res.Body).Decode(&ret); err != nil {
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4985,26 +5120,24 @@ func (c *TablesInsertCall) Context(ctx context.Context) *TablesInsertCall {
 }
 
 func (c *TablesInsertCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.table)
 	if err != nil {
 		return nil, err
 	}
-	ctype := "application/json"
+	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "projects/{projectId}/datasets/{datasetId}/tables")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
+	req.Header = reqHeaders
 	googleapi.Expand(req.URL, map[string]string{
 		"projectId": c.projectId,
 		"datasetId": c.datasetId,
 	})
-	req.Header.Set("Content-Type", ctype)
-	req.Header.Set("User-Agent", c.s.userAgent())
-	if c.ctx_ != nil {
-		return ctxhttp.Do(c.ctx_, c.s.client, req)
-	}
-	return c.s.client.Do(req)
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
 }
 
 // Do executes the "bigquery.tables.insert" call.
@@ -5039,7 +5172,8 @@ func (c *TablesInsertCall) Do(opts ...googleapi.CallOption) (*Table, error) {
 			HTTPStatusCode: res.StatusCode,
 		},
 	}
-	if err := json.NewDecoder(res.Body).Decode(&ret); err != nil {
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -5141,23 +5275,22 @@ func (c *TablesListCall) Context(ctx context.Context) *TablesListCall {
 }
 
 func (c *TablesListCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	if c.ifNoneMatch_ != "" {
+		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
+	}
 	var body io.Reader = nil
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "projects/{projectId}/datasets/{datasetId}/tables")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("GET", urls, body)
+	req.Header = reqHeaders
 	googleapi.Expand(req.URL, map[string]string{
 		"projectId": c.projectId,
 		"datasetId": c.datasetId,
 	})
-	req.Header.Set("User-Agent", c.s.userAgent())
-	if c.ifNoneMatch_ != "" {
-		req.Header.Set("If-None-Match", c.ifNoneMatch_)
-	}
-	if c.ctx_ != nil {
-		return ctxhttp.Do(c.ctx_, c.s.client, req)
-	}
-	return c.s.client.Do(req)
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
 }
 
 // Do executes the "bigquery.tables.list" call.
@@ -5192,7 +5325,8 @@ func (c *TablesListCall) Do(opts ...googleapi.CallOption) (*TableList, error) {
 			HTTPStatusCode: res.StatusCode,
 		},
 	}
-	if err := json.NewDecoder(res.Body).Decode(&ret); err != nil {
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -5305,27 +5439,25 @@ func (c *TablesPatchCall) Context(ctx context.Context) *TablesPatchCall {
 }
 
 func (c *TablesPatchCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.table)
 	if err != nil {
 		return nil, err
 	}
-	ctype := "application/json"
+	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "projects/{projectId}/datasets/{datasetId}/tables/{tableId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PATCH", urls, body)
+	req.Header = reqHeaders
 	googleapi.Expand(req.URL, map[string]string{
 		"projectId": c.projectId,
 		"datasetId": c.datasetId,
 		"tableId":   c.tableId,
 	})
-	req.Header.Set("Content-Type", ctype)
-	req.Header.Set("User-Agent", c.s.userAgent())
-	if c.ctx_ != nil {
-		return ctxhttp.Do(c.ctx_, c.s.client, req)
-	}
-	return c.s.client.Do(req)
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
 }
 
 // Do executes the "bigquery.tables.patch" call.
@@ -5360,7 +5492,8 @@ func (c *TablesPatchCall) Do(opts ...googleapi.CallOption) (*Table, error) {
 			HTTPStatusCode: res.StatusCode,
 		},
 	}
-	if err := json.NewDecoder(res.Body).Decode(&ret); err != nil {
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -5449,27 +5582,25 @@ func (c *TablesUpdateCall) Context(ctx context.Context) *TablesUpdateCall {
 }
 
 func (c *TablesUpdateCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("User-Agent", c.s.userAgent())
 	var body io.Reader = nil
 	body, err := googleapi.WithoutDataWrapper.JSONReader(c.table)
 	if err != nil {
 		return nil, err
 	}
-	ctype := "application/json"
+	reqHeaders.Set("Content-Type", "application/json")
 	c.urlParams_.Set("alt", alt)
 	urls := googleapi.ResolveRelative(c.s.BasePath, "projects/{projectId}/datasets/{datasetId}/tables/{tableId}")
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PUT", urls, body)
+	req.Header = reqHeaders
 	googleapi.Expand(req.URL, map[string]string{
 		"projectId": c.projectId,
 		"datasetId": c.datasetId,
 		"tableId":   c.tableId,
 	})
-	req.Header.Set("Content-Type", ctype)
-	req.Header.Set("User-Agent", c.s.userAgent())
-	if c.ctx_ != nil {
-		return ctxhttp.Do(c.ctx_, c.s.client, req)
-	}
-	return c.s.client.Do(req)
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
 }
 
 // Do executes the "bigquery.tables.update" call.
@@ -5504,7 +5635,8 @@ func (c *TablesUpdateCall) Do(opts ...googleapi.CallOption) (*Table, error) {
 			HTTPStatusCode: res.StatusCode,
 		},
 	}
-	if err := json.NewDecoder(res.Body).Decode(&ret); err != nil {
+	target := &ret
+	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
 		return nil, err
 	}
 	return ret, nil

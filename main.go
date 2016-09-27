@@ -10,15 +10,16 @@ import (
 )
 
 var (
-	config         = kingpin.Flag("config", "Configuration file with S3 and Redshift credentials").Required().File()
-	accessKey      = kingpin.Flag("access-key", "AWS access key. Defaults to $AWS_ACCESS_KEY_ID").OverrideDefaultFromEnvar("AWS_ACCESS_KEY_ID").Required().String()
-	secretKey      = kingpin.Flag("secret-access-key", "AWS secret access key. Defaults to $AWS_SECRET_").OverrideDefaultFromEnvar("AWS_SECRET_ACCESS_KEY").Required().String()
-	project        = kingpin.Flag("project", "Google Project ID").OverrideDefaultFromEnvar("GCLOUD_PROJECT").Required().String()
-	overwrite      = kingpin.Flag("overwrite", "Overwrite BigQuery table").Bool()
-	dateExpression = kingpin.Flag("date-expression", "Redshift SQL expression to return row date. e.g. CAST(inserted as DATE)").String()
-	dateFilter     = kingpin.Flag("date", "Date (YYYY-MM-DD) of partition to filter and load. e.g. 2016-09-30.").String()
-	dataset        = kingpin.Arg("dataset", "Destination BigQuery dataset").Required().String()
-	table          = kingpin.Arg("table", "Redshift table name").Required().String()
+	config               = kingpin.Flag("config", "Configuration file with S3 and Redshift credentials").Required().File()
+	accessKey            = kingpin.Flag("access-key", "AWS access key. Defaults to $AWS_ACCESS_KEY_ID").OverrideDefaultFromEnvar("AWS_ACCESS_KEY_ID").Required().String()
+	secretKey            = kingpin.Flag("secret-access-key", "AWS secret access key. Defaults to $AWS_SECRET_").OverrideDefaultFromEnvar("AWS_SECRET_ACCESS_KEY").Required().String()
+	project              = kingpin.Flag("project", "Google Project ID").OverrideDefaultFromEnvar("GCLOUD_PROJECT").Required().String()
+	overwrite            = kingpin.Flag("overwrite", "Overwrite BigQuery table").Bool()
+	usePartitionedTables = kingpin.Flag("partition", "Create time partitioned BigQuery tables.").Bool()
+	dateExpression       = kingpin.Flag("date-expression", "Redshift SQL expression to return row date. e.g. CAST(inserted as DATE)").String()
+	dateFilter           = kingpin.Flag("date", "Date (YYYY-MM-DD) of partition to filter and load. e.g. 2016-09-30.").String()
+	dataset              = kingpin.Arg("dataset", "Destination BigQuery dataset").Required().String()
+	table                = kingpin.Arg("table", "Redshift table name").Required().String()
 )
 
 var versionNumber string
@@ -61,6 +62,7 @@ func main() {
 	config := &Configuration{
 		AWS:               awsConfig,
 		OverwriteBigQuery: *overwrite,
+		DayPartition:      *usePartitionedTables,
 	}
 	shifter, err := NewShifter(config)
 	if err != nil {
@@ -74,7 +76,7 @@ func main() {
 	}
 
 	if partition != nil {
-		bq.DayShard = &partition.DateFilter
+		bq.DayPartition = &partition.DateFilter
 	}
 
 	err = shifter.Run(*table, partition, bq)

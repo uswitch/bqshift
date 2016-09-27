@@ -29,6 +29,8 @@ func (s *shifter) Run(table string, partition *redshift.DatePartition, tableRef 
 		return fmt.Errorf("dataset doesn't exist: %s", tableRef.DatasetID)
 	}
 
+	err = bq.EnsureTableExists(tableRef, s.config.DayPartition)
+
 	if err != nil {
 		return fmt.Errorf("error creating bigquery client: %s", err.Error())
 	}
@@ -69,6 +71,7 @@ func (s *shifter) Run(table string, partition *redshift.DatePartition, tableRef 
 
 	log.Println("loading into bigquery")
 	spec := &bigquery.LoadSpec{
+		Partitioned:    s.config.DayPartition,
 		TableReference: tableRef,
 		BucketName:     stored.BucketName,
 		ObjectPrefix:   stored.Prefix,
