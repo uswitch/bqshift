@@ -2,6 +2,7 @@ package redshift
 
 import (
 	"fmt"
+	"log"
 )
 
 type unloadOperation struct {
@@ -21,6 +22,8 @@ func newUnloadOperation(client *Client, config *AWSConfiguration, source *Redshi
 
 func (op *unloadOperation) execute() (*UnloadResult, error) {
 	statement := op.unloadStatement()
+	log.Println("executing unload:", statement)
+
 	_, err := op.client.execute(statement)
 	if err != nil {
 		return nil, err

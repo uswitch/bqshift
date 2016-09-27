@@ -17,6 +17,10 @@ $ export GOOGLE_APPLICATION_CREDENTIALS=/path/to/creds.json
 $ bqshift --config=config.example.yml <DEST DATASET> <REDSHIFT TABLE>
 ```
 
+## Notes
+
+As part of the unloading process bqshift generates SQL for Redshift; this is _not_ protected against SQL injection attacks so beware of using this tool with user-generated input.
+
 ## Releasing
 
 We use [https://github.com/progrium/gh-release](https://github.com/progrium/gh-release) to tag and release artifacts. Install with:

@@ -44,6 +44,12 @@ type RedshiftSource struct {
 	Partition *DatePartition
 }
 
+func (s *RedshiftSource) isPartitioned() bool {
+	return s.Partition != nil
+}
+
+const SQLDateFormat = "2006-01-02"
+
 func (s *RedshiftSource) SelectClause() string {
 	var columns bytes.Buffer
 	for i := 0; i < len(s.Schema.Columns); i++ {
@@ -52,7 +58,11 @@ func (s *RedshiftSource) SelectClause() string {
 		}
 		columns.WriteString(s.Schema.Columns[i].Name)
 	}
-	return fmt.Sprintf("SELECT %s FROM %s", columns.String(), s.Table)
+	if !s.isPartitioned() {
+		return fmt.Sprintf("SELECT %s FROM %s", columns.String(), s.Table)
+	}
+
+	return fmt.Sprintf("SELECT %s FROM %s WHERE %s = \\'%s\\'", columns.String(), s.Table, s.Partition.DateExpression, s.Partition.DateFilter.Format(SQLDateFormat))
 }
 
 type RedshiftConnectionDetails struct {
