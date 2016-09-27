@@ -17,6 +17,21 @@ $ export GOOGLE_APPLICATION_CREDENTIALS=/path/to/creds.json
 $ bqshift --config=config.example.yml <DEST DATASET> <REDSHIFT TABLE>
 ```
 
+### Time Partitioned Tables
+
+BigQuery supports [Partitioned Tables](https://cloud.google.com/bigquery/docs/partitioned-tables).
+
+> By dividing a large table into smaller partitions, you can improve query performance and reduce the number of bytes billed by restricting the amount of data scanned. BigQuery enables you to partition tables by date.
+
+bqshift can load partitioned data as long as the source data has date information stored, the destination table in BigQuery must also have been declared as time partitioned when it was created. bqshift can automatically create the correct table if it hasn't already been created.
+
+For example, to create a partitioned table from a table that has a `TIMESTAMP` column called `ts`, and to load data into the `2016-09-27` partition you can use the following command:
+
+```
+$ bqshift --partition --date-expression="CAST(ts as DATE)" --date=2016-09-27 --config=config.example.yml <DEST DATASET> <REDSHIFT TABLE>
+```
+
+
 ## Notes
 
 As part of the unloading process bqshift generates SQL for Redshift; this is _not_ protected against SQL injection attacks so beware of using this tool with user-generated input.
