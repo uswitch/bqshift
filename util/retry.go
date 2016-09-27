@@ -2,6 +2,7 @@ package util
 
 import (
 	"github.com/cenk/backoff"
+	"log"
 )
 
 func RetryOp(op func() (interface{}, error)) (interface{}, error) {
@@ -10,6 +11,7 @@ func RetryOp(op func() (interface{}, error)) (interface{}, error) {
 	retryOp := func() error {
 		result, err := op()
 		if err != nil {
+			log.Println("error executing operation. will retry.", err.Error())
 			return err
 		}
 		resultch <- result

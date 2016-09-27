@@ -73,6 +73,10 @@ func main() {
 		log.Fatalln(err.Error())
 	}
 
+	if partition != nil {
+		bq.DayShard = &partition.DateFilter
+	}
+
 	err = shifter.Run(*table, partition, bq)
 	if err != nil {
 		log.Fatalln(err.Error())

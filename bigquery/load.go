@@ -81,6 +81,7 @@ func (c *Client) LoadTable(spec *LoadSpec) error {
 	}
 
 	job := resp.(*bq.Job)
+	log.Println("created load job, waiting for completion.")
 
 	return c.blockForJobCompletion(spec.TableReference.ProjectID, job)
 }
