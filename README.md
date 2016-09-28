@@ -31,6 +31,15 @@ For example, to create a partitioned table from a table that has a `TIMESTAMP` c
 $ bqshift --partition --date-expression="CAST(ts as DATE)" --date=2016-09-27 --config=config.example.yml <DEST DATASET> <REDSHIFT TABLE>
 ```
 
+#### Overwriting Partitioned Data
+
+It's possible to replace/update an existing partition by adding the `--overwrite` flag. 
+
+```
+$ bqshift --overwrite --partition --date-expression="CAST(ts as DATE)" --date=2016-09-27 --config=config.example.yml <DEST DATASET> <REDSHIFT TABLE>
+```
+
+Note that you can _only_ update data that was already part of a partition. For example, if you were to create a partitioned table and load a bulk set of historical/archived data when you use `--overwrite` and `--date` you'll overwrite all data in the table. Instead I would suggest having a separate `_archive` table from the partitioned tables.
 
 ## Notes
 
