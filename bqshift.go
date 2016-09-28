@@ -36,22 +36,9 @@ func (s *shifter) Run(table string, partition *redshift.DatePartition, tableRef 
 	}
 
 	log.Println("unloading to s3")
-	var unloaded *redshift.UnloadResult
-	// TODO extract these two flows into struct func
-	if partition == nil {
-		result, err := s.redshift.Unload(table)
-		if err != nil {
-			return fmt.Errorf("error unloading: %s", err.Error())
-		}
-		unloaded = result
-	}
-
-	if partition != nil {
-		result, err := s.redshift.UnloadPartition(table, partition)
-		if err != nil {
-			return fmt.Errorf("error unloading for partition %s: %s", partition, err.Error())
-		}
-		unloaded = result
+	unloaded, err := s.redshift.Unload(table, partition)
+	if err != nil {
+		return fmt.Errorf("error unloading: %s", err.Error())
 	}
 
 	log.Println("transferring to cloud storage")
