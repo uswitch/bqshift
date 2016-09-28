@@ -79,16 +79,16 @@ func (ref *TableReference) ToGoogleReference() *bq.TableReference {
 	return &bq.TableReference{
 		DatasetId: ref.DatasetID,
 		ProjectId: ref.ProjectID,
-		TableId:   ref.TableID,
+		TableId:   ref.googleTableID(),
 	}
 }
 
-func (ref *TableReference) ToPartitionedReference() *bq.TableReference {
-	return &bq.TableReference{
-		DatasetId: ref.DatasetID,
-		ProjectId: ref.ProjectID,
-		TableId:   fmt.Sprintf("%s$%s", ref.TableID, bqfmt(*ref.DayPartition)),
+func (ref *TableReference) googleTableID() string {
+	if ref.DayPartition == nil {
+		return ref.TableID
 	}
+
+	return fmt.Sprintf("%s$%s", ref.TableID, bqfmt(*ref.DayPartition))
 }
 
 func (ref *TableReference) String() string {

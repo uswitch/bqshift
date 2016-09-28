@@ -64,11 +64,7 @@ func (c *Client) LoadTable(spec *LoadSpec) error {
 		SourceFormat:        "CSV",
 		SourceUris:          []string{pattern},
 		Schema:              spec.Schema,
-	}
-	if spec.Partitioned {
-		load.DestinationTable = spec.TableReference.ToPartitionedReference()
-	} else {
-		load.DestinationTable = spec.TableReference.ToGoogleReference()
+		DestinationTable:    spec.TableReference.ToGoogleReference(),
 	}
 
 	config := &bq.JobConfiguration{
