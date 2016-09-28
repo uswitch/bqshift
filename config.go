@@ -8,4 +8,5 @@ type Configuration struct {
 	OverwriteBigQuery bool
 	DayPartition      bool
 	AWS               *redshift.AWSConfiguration
+	WhereClause       string
 }

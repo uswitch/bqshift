@@ -36,7 +36,7 @@ func (s *shifter) Run(table string, partition *redshift.DatePartition, tableRef 
 	}
 
 	log.Println("unloading to s3")
-	unloaded, err := s.redshift.Unload(table, partition)
+	unloaded, err := s.redshift.Unload(table, partition, s.config.WhereClause)
 	if err != nil {
 		return fmt.Errorf("error unloading: %s", err.Error())
 	}

@@ -33,7 +33,7 @@ func (c *Client) EnsureTableExists(ref *TableReference, partition bool) error {
 
 	newTable := &bq.Table{
 		Description:    "bqshift created table",
-		TableReference: ref.ToGoogleReference(),
+		TableReference: ref.ToUndecoratedGoogleReference(),
 	}
 
 	if partition {
@@ -80,6 +80,14 @@ func (ref *TableReference) ToGoogleReference() *bq.TableReference {
 		DatasetId: ref.DatasetID,
 		ProjectId: ref.ProjectID,
 		TableId:   ref.googleTableID(),
+	}
+}
+
+func (ref *TableReference) ToUndecoratedGoogleReference() *bq.TableReference {
+	return &bq.TableReference{
+		DatasetId: ref.DatasetID,
+		ProjectId: ref.ProjectID,
+		TableId:   ref.TableID,
 	}
 }
 

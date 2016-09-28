@@ -18,8 +18,10 @@ var (
 	usePartitionedTables = kingpin.Flag("partition", "Create time partitioned BigQuery tables.").Bool()
 	dateExpression       = kingpin.Flag("date-expression", "Redshift SQL expression to return row date. e.g. CAST(inserted as DATE)").String()
 	dateFilter           = kingpin.Flag("date", "Date (YYYY-MM-DD) of partition to filter and load. e.g. 2016-09-30.").String()
+	where                = kingpin.Flag("where", "Redshift WHERE clause. Cannot be used with --date/--date-expression. e.g.: CAST(inserted as DATE) < 2016-09-30").String()
 	dataset              = kingpin.Arg("dataset", "Destination BigQuery dataset").Required().String()
 	table                = kingpin.Arg("table", "Redshift table name").Required().String()
+	destinationTable     = kingpin.Arg("destination-table", "BigQuery table name. Defaults to Redshift table name").String()
 )
 
 var versionNumber string
@@ -48,6 +50,13 @@ func partitionFromArgs() (*redshift.DatePartition, error) {
 	return redshift.NewDatePartition(*dateExpression, t), nil
 }
 
+func destinationTableID() string {
+	if *destinationTable == "" {
+		return *table
+	}
+	return *destinationTable
+}
+
 func main() {
 	kingpin.Version(version())
 	kingpin.Parse()
@@ -63,13 +72,14 @@ func main() {
 		AWS:               awsConfig,
 		OverwriteBigQuery: *overwrite,
 		DayPartition:      *usePartitionedTables,
+		WhereClause:       *where,
 	}
 	shifter, err := NewShifter(config)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
 
-	bq := bigquery.NewTableReference(*project, *dataset, *table)
+	bq := bigquery.NewTableReference(*project, *dataset, destinationTableID())
 	partition, err := partitionFromArgs()
 	if err != nil {
 		log.Fatalln(err.Error())

@@ -42,15 +42,16 @@ func (c *Client) doUnload(source *RedshiftSource) (*UnloadResult, error) {
 	return newUnloadOperation(c, c.aws, source).execute()
 }
 
-func (c *Client) Unload(table string, partition *DatePartition) (*UnloadResult, error) {
+func (c *Client) Unload(table string, partition *DatePartition, whereClause string) (*UnloadResult, error) {
 	schema, err := c.ExtractSchema(table)
 	if err != nil {
 		return nil, fmt.Errorf("error extracting table schema: %s", err.Error())
 	}
 	source := &RedshiftSource{
-		Table:     table,
-		Schema:    schema,
-		Partition: partition,
+		Table:       table,
+		Schema:      schema,
+		Partition:   partition,
+		WhereClause: whereClause,
 	}
 	return c.doUnload(source)
 }

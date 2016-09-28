@@ -6,6 +6,7 @@ import (
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -39,13 +40,26 @@ func NewDatePartition(expression string, t time.Time) *DatePartition {
 }
 
 type RedshiftSource struct {
-	Table     string
-	Schema    *TableSchema
-	Partition *DatePartition
+	Table       string
+	Schema      *TableSchema
+	Partition   *DatePartition
+	WhereClause string
 }
 
 func (s *RedshiftSource) isPartitioned() bool {
 	return s.Partition != nil
+}
+
+func escape(s string) string {
+	return strings.Replace(s, "'", "\\'", -1)
+}
+
+func (s *RedshiftSource) where() string {
+	if s.WhereClause == "" {
+		return ""
+	}
+
+	return fmt.Sprintf("WHERE %s", escape(s.WhereClause))
 }
 
 const SQLDateFormat = "2006-01-02"
@@ -59,7 +73,7 @@ func (s *RedshiftSource) SelectClause() string {
 		columns.WriteString(s.Schema.Columns[i].Name)
 	}
 	if !s.isPartitioned() {
-		return fmt.Sprintf("SELECT %s FROM %s", columns.String(), s.Table)
+		return fmt.Sprintf("SELECT %s FROM %s %s", columns.String(), s.Table, s.where())
 	}
 
 	return fmt.Sprintf("SELECT %s FROM %s WHERE %s = \\'%s\\'", columns.String(), s.Table, s.Partition.DateExpression, s.Partition.DateFilter.Format(SQLDateFormat))
