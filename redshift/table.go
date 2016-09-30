@@ -127,6 +127,9 @@ func columnType(t string) (int, error) {
 	if strings.HasPrefix(t, "integer") {
 		return INTEGER, nil
 	}
+	if strings.HasPrefix(t, "bigint") {
+		return INTEGER, nil
+	}
 	if strings.HasPrefix(t, "smallint") {
 		return SMALLINT, nil
 	}
