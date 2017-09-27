@@ -13,6 +13,7 @@ var (
 	config               = kingpin.Flag("config", "Configuration file with S3 and Redshift credentials").Required().File()
 	accessKey            = kingpin.Flag("access-key", "AWS access key. Defaults to $AWS_ACCESS_KEY_ID").OverrideDefaultFromEnvar("AWS_ACCESS_KEY_ID").Required().String()
 	secretKey            = kingpin.Flag("secret-access-key", "AWS secret access key. Defaults to $AWS_SECRET_").OverrideDefaultFromEnvar("AWS_SECRET_ACCESS_KEY").Required().String()
+	sessionToken         = kingpin.Flag("session-token", "AWS session token.").String()
 	project              = kingpin.Flag("project", "Google Project ID").OverrideDefaultFromEnvar("GCLOUD_PROJECT").Required().String()
 	overwrite            = kingpin.Flag("overwrite", "Overwrite BigQuery table").Bool()
 	usePartitionedTables = kingpin.Flag("partition", "Create time partitioned BigQuery tables.").Bool()
@@ -67,6 +68,7 @@ func main() {
 	}
 	awsConfig.S3.AccessKey = *accessKey
 	awsConfig.S3.SecretKey = *secretKey
+	awsConfig.S3.SessionToken = *sessionToken
 
 	config := &Configuration{
 		AWS:               awsConfig,

@@ -88,13 +88,17 @@ type RedshiftConnectionDetails struct {
 }
 
 type S3Configuration struct {
-	Bucket    string `yaml:"bucket"`
-	AccessKey string `yaml:"access_key"`
-	SecretKey string `yaml:"secret_key"`
+	Bucket       string `yaml:"bucket"`
+	AccessKey    string `yaml:"access_key"`
+	SecretKey    string `yaml:"secret_key"`
+	SessionToken string `yaml:"session_token"`
 }
 
 func (c S3Configuration) ToRedshiftCredentialsClause() string {
-	return fmt.Sprintf("aws_access_key_id=%s;aws_secret_access_key=%s", c.AccessKey, c.SecretKey)
+	if c.SessionToken == "" {
+		return fmt.Sprintf("aws_access_key_id=%s;aws_secret_access_key=%s", c.AccessKey, c.SecretKey)
+	}
+	return fmt.Sprintf("aws_access_key_id=%s;aws_secret_access_key=%s;token=%s", c.AccessKey, c.SecretKey, c.SessionToken)
 }
 
 func (c *RedshiftConnectionDetails) URLString() string {
