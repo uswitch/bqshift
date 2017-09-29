@@ -1,5 +1,5 @@
 FROM scratch
 
-ADD bin/klint /klint
+ADD bin/bqshift /bqshift
 
-ENTRYPOINT ["/klint"]
+ENTRYPOINT ["/bqshift"]
