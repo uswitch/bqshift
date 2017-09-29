@@ -1,0 +1,18 @@
+workspace:
+  base: /go
+  path: src/github.com/uswitch/bqshift
+
+pipeline:
+  build:
+    when:
+      event: push
+    image: golang:1.8
+    commands:
+      - CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/bqshift .
+
+  publish:
+    when:
+      event: push
+    image: plugins/docker
+    repo: registry.usw.co/cloud/bqshift
+    tags: [ "${DRONE_COMMIT_SHA}", "latest" ]
