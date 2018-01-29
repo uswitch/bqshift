@@ -99,7 +99,7 @@ func (c *Client) ExtractSchema(table string) (*TableSchema, error) {
 		if err != nil {
 			return nil, err
 		}
-		cols = append(cols, &Column{name, colType})
+		cols = append(cols, &Column{fmt.Sprintf("\"%s\"",name), colType})
 	}
 
 	return &TableSchema{cols}, nil
