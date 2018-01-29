@@ -17,9 +17,10 @@ type Client struct {
 	service  *transfer.Service
 	table    *bq.TableReference
 	s3config *redshift.S3Configuration
+	destinationBucket *string
 }
 
-func NewClient(config *bq.TableReference, s3 *redshift.S3Configuration) (*Client, error) {
+func NewClient(config *bq.TableReference, s3 *redshift.S3Configuration, destinationBucket *string) (*Client, error) {
 	ctx := context.Background()
 	client, err := google.DefaultClient(ctx, transfer.CloudPlatformScope)
 	if err != nil {
@@ -29,8 +30,12 @@ func NewClient(config *bq.TableReference, s3 *redshift.S3Configuration) (*Client
 	if err != nil {
 		return nil, err
 	}
+	dstBucket := destinationBucket
+	if dstBucket == nil {
+		dstBucket = &s3.Bucket
+	}
 
-	c := &Client{svc, config, s3}
+	c := &Client{svc, config, s3, dstBucket}
 	return c, nil
 }
 
@@ -97,8 +102,6 @@ func (c *Client) TransferToCloudStorage(source *redshift.UnloadResult) (*StoredR
 		Year:  int64(startTime.Year()),
 	}
 
-	destinationBucket := source.Bucket
-
 	job := &transfer.TransferJob{
 		Description: fmt.Sprintf("bqshift %s", source.ObjectPrefix),
 		Status:      "ENABLED",
@@ -124,7 +127,7 @@ func (c *Client) TransferToCloudStorage(source *redshift.UnloadResult) (*StoredR
 				BucketName: source.Bucket,
 			},
 			GcsDataSink: &transfer.GcsData{
-				BucketName: destinationBucket,
+				BucketName: *c.destinationBucket,
 			},
 			ObjectConditions: &transfer.ObjectConditions{
 				IncludePrefixes: []string{source.ObjectPrefix},
@@ -145,5 +148,5 @@ func (c *Client) TransferToCloudStorage(source *redshift.UnloadResult) (*StoredR
 		return nil, err
 	}
 
-	return &StoredResult{BucketName: destinationBucket, Prefix: source.ObjectPrefix}, nil
+	return &StoredResult{BucketName: *c.destinationBucket, Prefix: source.ObjectPrefix}, nil
 }

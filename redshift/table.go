@@ -139,5 +139,8 @@ func columnType(t string) (int, error) {
 	if strings.HasPrefix(t, "numeric") {
 		return DECIMAL, nil
 	}
+	if strings.HasPrefix(t, "real") {
+		return DECIMAL, nil
+	}
 	return 0, fmt.Errorf("unexpected col type: %s", t)
 }

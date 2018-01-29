@@ -22,6 +22,7 @@ var (
 	dataset              = kingpin.Arg("dataset", "Destination BigQuery dataset").Required().String()
 	table                = kingpin.Arg("table", "Redshift table name").Required().String()
 	destinationTable     = kingpin.Arg("destination-table", "BigQuery table name. Defaults to Redshift table name").String()
+	destinationBucket     = kingpin.Flag("destination-bucket", "Google cloud storage bucket name. Defaults to S3 bucket name").String()
 )
 
 var versionNumber string
@@ -70,9 +71,11 @@ func main() {
 
 	config := &Configuration{
 		AWS:               awsConfig,
+		DestinationBucket: *destinationBucket,
 		OverwriteBigQuery: *overwrite,
 		DayPartition:      *usePartitionedTables,
 		WhereClause:       *where,
+
 	}
 	shifter, err := NewShifter(config)
 	if err != nil {
