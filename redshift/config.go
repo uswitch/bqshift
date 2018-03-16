@@ -70,7 +70,7 @@ func (s *RedshiftSource) SelectClause() string {
 		if i > 0 {
 			columns.WriteString(",")
 		}
-		columns.WriteString(s.Schema.Columns[i].Name)
+		columns.WriteString(fmt.Sprintf("\"%s\"",s.Schema.Columns[i].Name))
 	}
 	if !s.isPartitioned() {
 		return fmt.Sprintf("SELECT %s FROM %s %s", columns.String(), s.Table, s.where())
